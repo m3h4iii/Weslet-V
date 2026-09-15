@@ -1,7 +1,7 @@
 import type { Brand, Product } from "./types";
 
 // Draft data so the app runs before the backend is wired.
-// Images: random Creative-Commons photos by tag (loremflickr) — preview only.
+// Images: neutral placeholder cards (piece name on a soft background) until real product photos exist.
 const b = (id: string, name: string, slug: string, city: string): Brand => ({ id, name, slug, city, logoUrl: null });
 
 export const mockBrands: Brand[] = [
@@ -13,14 +13,16 @@ export const mockBrands: Brand[] = [
   b("b6", "Kairouan Studio", "kairouan-studio", "Kairouan"),
 ];
 
-const img = (tag: string, n: number, w = 900, h = 1600) => `https://loremflickr.com/${w}/${h}/${tag}?lock=${n}`;
+const TONES = ["EDE7F9", "F9E4EC", "FBF0DC", "E6EEF8", "EEE9E3"];
+const img = (label: string, n: number, w = 900, h = 1600) =>
+  `https://placehold.co/${w}x${h}/${TONES[n % TONES.length]}/6E6678.png?text=${encodeURIComponent(label)}&font=montserrat`;
 
 const p = (
-  id: string, name: string, price: number, brand: Brand, tag: string, n: number,
+  id: string, name: string, price: number, brand: Brand, _tag: string, n: number,
   category: string, variants: string[] = [], description: string | null = null,
 ): Product => ({
   id, name, price, brand, category, variants, description, videoUrl: null,
-  images: [img(tag, n), img(tag, n + 50), img(tag, n + 100)],
+  images: [img(name, n), img(`${name} · 2`, n + 1), img(`${name} · 3`, n + 2)],
 });
 
 export const mockProducts: Product[] = [

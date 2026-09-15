@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Weslet",
-    "slug": "weslet",
+    "slug": "weslet-xv8p9rc72a1w0rdswebpv",
     "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -40,7 +40,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "REPLACE_AFTER_EAS_INIT"
+        "projectId": "0dee84ba-eb3f-4074-a10a-267c231b37a4"
       }
     }
   }

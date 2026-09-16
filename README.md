@@ -5,14 +5,27 @@ Reels-style feed of pieces from Tunisian creators, plus search. Expo SDK 57, Exp
 ## Screens
 - `app/(tabs)/index.tsx` — Pour vous: one piece per screen, swipe up. Like / share / add to bag on the right rail.
 - `app/(tabs)/explore.tsx` — search + category chips + grid.
-- `app/(tabs)/bag.tsx` — cart (persisted on device).
-- `app/(tabs)/profile.tsx` — email magic-link sign-in via Supabase.
+- `app/(tabs)/bag.tsx` — cart grouped by boutique (persisted on device), 7 DT delivery per boutique.
+- `app/(tabs)/profile.tsx` — account: name/phone, saved delivery address, link to orders.
 - `app/product/[id].tsx` — photos, variants, add to bag.
+- `app/auth.tsx` — sign-in: email → 6-digit code (Supabase OTP, same email template as the dashboard) → name/phone.
+- `app/checkout.tsx` — delivery form (24 governorates), per-boutique summary, calls the `place_order` RPC once per boutique.
+- `app/orders/index.tsx`, `app/orders/[id].tsx` — order history and tracking timeline (live via Supabase realtime).
 
 ## Data
 `lib/data.ts` reads `EXPO_PUBLIC_DATA_SOURCE`:
 - `mock` (default) — 12 draft pieces from `lib/mock.ts`, so the app runs today.
-- `supabase` — reads `products` + `brands`. Column names live in one function (`rowToProduct`); adjust them to the real schema.
+- `supabase` — mapped to the real Weslet schema: `products` (title, price_millimes, images, stock_qty),
+  `merchants`, `categories`, `product_variants` (optional), `orders`, `order_items`, `order_events`, `profiles`.
+  Prices are converted millimes → dinars once, in `lib/data.ts`.
+
+In mock mode, checkout still works: orders are saved on the device only, and no sign-in is required.
+In supabase mode, checkout requires sign-in (the RPC checks `auth.uid()`).
+
+## Environment variables
+- `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` — from Supabase → Project Settings → API.
+- `EXPO_PUBLIC_DATA_SOURCE` — `mock` or `supabase`.
+Set them on Netlify (Site configuration → Environment variables) and on expo.dev (Environment variables, Preview).
 
 ## Ship without a local setup
 1. Create a GitHub repo, upload this folder (drag and drop everything except `node_modules`).

@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ProductCard } from "@/components/ProductCard";
-import { CATEGORIES, searchProducts } from "@/lib/data";
+import { fetchCategories, searchProducts } from "@/lib/data";
 import { colors, radius } from "@/lib/theme";
-import type { Product } from "@/lib/types";
+import type { Category, Product } from "@/lib/types";
 
 export default function ExploreScreen() {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string | null>(null);
   const [items, setItems] = useState<Product[]>([]);
+  const [cats, setCats] = useState<Category[]>([]);
+
+  useEffect(() => { fetchCategories().then(setCats).catch(() => setCats([])); }, []);
 
   useEffect(() => {
     const t = setTimeout(() => searchProducts(q, cat).then(setItems).catch(() => setItems([])), 200);
@@ -30,12 +33,12 @@ export default function ExploreScreen() {
           autoCorrect={false}
         />
       </View>
-      <View style={styles.chips}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips} style={styles.chipsRow}>
         <Chip label="Tout" active={cat === null} onPress={() => setCat(null)} />
-        {CATEGORIES.map((c) => (
-          <Chip key={c} label={c} active={cat === c} onPress={() => setCat(c)} />
+        {cats.map((c) => (
+          <Chip key={c.slug} label={c.label} active={cat === c.slug} onPress={() => setCat(cat === c.slug ? null : c.slug)} />
         ))}
-      </View>
+      </ScrollView>
       <FlatList
         data={items}
         keyExtractor={(p) => p.id}
@@ -64,7 +67,8 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, backgroundColor: colors.mist,
   },
   input: { flex: 1, fontSize: 16, color: colors.ink },
-  chips: { flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingTop: 12 },
+  chipsRow: { flexGrow: 0, height: 54 },
+  chips: { flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingTop: 12, alignItems: "center" },
   chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.line },
   chipOn: { backgroundColor: colors.ink, borderColor: colors.ink },
   chipText: { fontSize: 14, color: colors.ink },

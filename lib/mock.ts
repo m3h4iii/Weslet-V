@@ -21,7 +21,7 @@ const p = (
   id: string, name: string, price: number, brand: Brand, _tag: string, n: number,
   category: string, variants: string[] = [], description: string | null = null,
 ): Product => ({
-  id, name, price, brand, category, variants, description, videoUrl: null,
+  id, name, price, brand, category, variants, description, videoUrl: null, compareAt: null, stock: 10, variantIds: {},
   images: [img(name, n), img(`${name} · 2`, n + 1), img(`${name} · 3`, n + 2)],
 });
 

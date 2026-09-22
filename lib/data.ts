@@ -133,6 +133,17 @@ export async function fetchFeed(): Promise<Post[]> {
   return posts.length > 0 ? posts : productsAsPosts(await fetchProducts());
 }
 
+/** Videos & photos a boutique published about one product (for the product page gallery). */
+export async function fetchProductPosts(product: Product): Promise<Post[]> {
+  if (IS_MOCK) return mockPosts.filter((x) => x.product.id === product.id);
+  const { data, error } = await supabase.from("posts").select(POST_SELECT).eq("product_id", product.id).order("sort_order").order("created_at");
+  if (error || !data) return [];
+  return (data as any[]).map((r) => ({
+    id: String(r.id), kind: r.kind === "video" ? "video" : "image", url: r.url,
+    poster: r.poster_url ?? product.images[0] ?? null, caption: r.caption ?? null, createdAt: r.created_at ?? "", product,
+  }));
+}
+
 function productsAsPosts(products: Product[]): Post[] {
   return products
     .filter((p) => p.images.length > 0)

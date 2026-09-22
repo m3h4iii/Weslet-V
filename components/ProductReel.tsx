@@ -118,13 +118,15 @@ export function ProductReel({ post, height, active }: Props) {
         </View>
       )}
 
-      {post.kind === "video" ? (
-        <Pressable onPress={() => { setSound(!sound); Haptics.selectionAsync().catch(() => {}); }} hitSlop={10} style={styles.sound}>
-          <Text style={styles.soundText}>{sound ? "🔊" : "🔇"}</Text>
-        </Pressable>
-      ) : null}
-
       <View style={styles.rail}>
+        {post.kind === "video" ? (
+          <RailButton
+            label="♪"
+            tint="#fff"
+            strike={!sound}
+            onPress={() => { setSound(!sound); Haptics.selectionAsync().catch(() => {}); }}
+          />
+        ) : null}
         <RailButton label={liked ? "♥" : "♡"} tint={liked ? colors.pink : "#fff"} onPress={like} />
         <RailButton label="↗" onPress={() => shareProduct(product)} />
         <RailButton label="+" onPress={addToBag} />
@@ -171,15 +173,24 @@ function ReelVideo({ uri, poster, active, muted }: { uri: string; poster?: strin
   return (
     <View style={StyleSheet.absoluteFill}>
       {poster ? <Image source={{ uri: poster }} style={StyleSheet.absoluteFill} contentFit="cover" /> : null}
-      <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="cover" nativeControls={false} />
+      <VideoView
+        player={player}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+        nativeControls={false}
+        playsInline
+        allowsPictureInPicture={false}
+        fullscreenOptions={{ enable: false }}
+      />
     </View>
   );
 }
 
-function RailButton({ label, onPress, tint = "#fff" }: { label: string; onPress: () => void; tint?: string }) {
+function RailButton({ label, onPress, tint = "#fff", strike = false }: { label: string; onPress: () => void; tint?: string; strike?: boolean }) {
   return (
     <Pressable onPress={onPress} style={styles.railBtn} hitSlop={8}>
       <Text style={[styles.railText, { color: tint }]}>{label}</Text>
+      {strike ? <View style={styles.strike} pointerEvents="none" /> : null}
     </Pressable>
   );
 }
@@ -192,11 +203,7 @@ const styles = StyleSheet.create({
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.45)" },
   dotOn: { backgroundColor: "#fff", width: 18 },
   rail: { position: "absolute", right: 14, bottom: 150, gap: 14, alignItems: "center" },
-  sound: {
-    position: "absolute", right: 14, bottom: 340, width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.35)", borderWidth: 1, borderColor: "rgba(255,255,255,0.3)",
-  },
-  soundText: { fontSize: 18 },
+  strike: { position: "absolute", width: 22, height: 2, backgroundColor: "#fff", borderRadius: 1, transform: [{ rotate: "-45deg" }] },
   railBtn: {
     width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center",
     backgroundColor: "rgba(255,255,255,0.18)", borderWidth: 1, borderColor: "rgba(255,255,255,0.35)",

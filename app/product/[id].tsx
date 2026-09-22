@@ -4,12 +4,13 @@ import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { fetchProduct, unitsLeft } from "@/lib/data";
+import { fetchProduct, fetchProductPosts, unitsLeft } from "@/lib/data";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { useCart } from "@/lib/cart";
 import { usePrefs } from "@/lib/prefs";
 import { shareProduct } from "@/lib/share";
 import { colors, formatPrice, radius } from "@/lib/theme";
-import type { Product } from "@/lib/types";
+import type { Post, Product } from "@/lib/types";
 
 export default function ProductScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -19,12 +20,14 @@ export default function ProductScreen() {
   const { add } = useCart();
   const { isFavorite, toggleFavorite, markViewed } = usePrefs();
   const [p, setP] = useState<Product | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [slide, setSlide] = useState(0);
   const [variant, setVariant] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProduct(id).then((prod) => {
       setP(prod);
-      if (prod) markViewed(prod.id);
+      if (prod) { markViewed(prod.id); fetchProductPosts(prod).then(setPosts).catch(() => {}); }
       // Preselect only when there is a single available size; otherwise the buyer must choose.
       const avail = prod ? prod.variants.filter((v) => unitsLeft(prod, v) > 0) : [];
       setVariant(avail.length === 1 ? avail[0] : null);
@@ -39,6 +42,14 @@ export default function ProductScreen() {
   const canAdd = !soldOut && !needsSize;
   const left = unitsLeft(p, variant);
 
+  // Gallery: the boutique's videos first, then product photos, then extra photo posts.
+  type Slide = { key: string; kind: "image" | "video"; url: string; poster?: string | null };
+  const slides: Slide[] = [
+    ...posts.filter((x) => x.kind === "video").map((x) => ({ key: x.id, kind: "video" as const, url: x.url, poster: x.poster })),
+    ...p.images.map((u, i) => ({ key: `img-${i}`, kind: "image" as const, url: u })),
+    ...posts.filter((x) => x.kind === "image" && !p.images.includes(x.url)).map((x) => ({ key: x.id, kind: "image" as const, url: x.url })),
+  ];
+
   const addToBag = () => {
     if (!canAdd) return;
     add(p, variant);
@@ -49,14 +60,34 @@ export default function ProductScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.white }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
-        <FlatList
-          data={p.images}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(u, i) => `${i}-${u}`}
-          renderItem={({ item }) => <Image source={{ uri: item }} style={{ width, height: width * 1.3 }} contentFit="cover" />}
-        />
+        {slides.length === 0 ? (
+          <View style={{ width, height: width * 1.3, backgroundColor: colors.mist, alignItems: "center", justifyContent: "center" }}>
+            <Text style={{ color: colors.muted }}>Pas encore de photo</Text>
+          </View>
+        ) : (
+          <View>
+            <FlatList
+              data={slides}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(sl) => sl.key}
+              onMomentumScrollEnd={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / width))}
+              renderItem={({ item, index }) =>
+                item.kind === "video" ? (
+                  <GalleryVideo uri={item.url} poster={item.poster ?? undefined} active={index === slide} width={width} />
+                ) : (
+                  <Image source={{ uri: item.url }} style={{ width, height: width * 1.3 }} contentFit="cover" />
+                )
+              }
+            />
+            {slides.length > 1 && (
+              <View style={styles.dots} pointerEvents="none">
+                {slides.map((sl, i) => <View key={sl.key} style={[styles.dot, i === slide && styles.dotOn]} />)}
+              </View>
+            )}
+          </View>
+        )}
         <View style={styles.body}>
           <Pressable onPress={() => router.push({ pathname: "/boutique/[id]", params: { id: p.brand.id } })} hitSlop={6} style={{ alignSelf: "flex-start" }}>
             <Text style={styles.brand}>{p.brand.name}{p.brand.city ? ` · ${p.brand.city}` : ""} ›</Text>
@@ -116,7 +147,29 @@ export default function ProductScreen() {
   );
 }
 
+function GalleryVideo({ uri, poster, active, width }: { uri: string; poster?: string; active: boolean; width: number }) {
+  const player = useVideoPlayer(uri, (pl) => { pl.loop = true; pl.muted = true; });
+  useEffect(() => { if (active) player.play(); else player.pause(); }, [active, player]);
+  return (
+    <View style={{ width, height: width * 1.3, backgroundColor: colors.ink }}>
+      {poster ? <Image source={{ uri: poster }} style={StyleSheet.absoluteFill} contentFit="cover" /> : null}
+      <VideoView
+        player={player}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+        nativeControls={false}
+        playsInline
+        allowsPictureInPicture={false}
+        fullscreenOptions={{ enable: false }}
+      />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  dots: { position: "absolute", bottom: 12, left: 0, right: 0, flexDirection: "row", justifyContent: "center", gap: 6 },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.55)" },
+  dotOn: { backgroundColor: "#fff", width: 18 },
   body: { padding: 18, gap: 6 },
   brand: { color: colors.muted, fontSize: 14 },
   name: { color: colors.ink, fontSize: 26, fontWeight: "700", letterSpacing: -0.5 },

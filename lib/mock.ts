@@ -42,7 +42,10 @@ export const mockProducts: Product[] = [
 
 // Feed posts: two posts for the first piece to show that stock stays in sync across posts.
 export const mockPosts: Post[] = [
-  { id: "post-1a", kind: "image", url: mockProducts[0].images[0], poster: null, caption: "Nouvelle collection · dispo en S / M / L", createdAt: "2026-09-20T10:00:00Z", product: mockProducts[0] },
+  // Set EXPO_PUBLIC_MOCK_VIDEO to an mp4 URL to preview a video reel in mock mode.
+  process.env.EXPO_PUBLIC_MOCK_VIDEO
+    ? { id: "post-1a", kind: "video", url: process.env.EXPO_PUBLIC_MOCK_VIDEO, poster: mockProducts[0].images[0], caption: "Nouvelle collection · dispo en S / M / L", createdAt: "2026-09-20T10:00:00Z", product: mockProducts[0] }
+    : { id: "post-1a", kind: "image", url: mockProducts[0].images[0], poster: null, caption: "Nouvelle collection · dispo en S / M / L", createdAt: "2026-09-20T10:00:00Z", product: mockProducts[0] },
   ...mockProducts.slice(1).map((pr, i) => ({
     id: `post-${pr.id}`, kind: "image" as const, url: pr.images[0], poster: null, caption: null,
     createdAt: new Date(Date.parse("2026-09-19T10:00:00Z") - i * 3600_000).toISOString(), product: pr,

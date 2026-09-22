@@ -4,9 +4,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback } from "react";
 import { Field, fieldStyles } from "@/components/Field";
+import { AddressForm } from "@/components/AddressForm";
 import { useAuth } from "@/lib/auth";
 import { IS_MOCK } from "@/lib/data";
-import { loadAddress, normalizePhone } from "@/lib/address";
+import { emptyAddress, loadAddress, normalizePhone, saveAddress, validateAddress } from "@/lib/address";
 import { colors, radius } from "@/lib/theme";
 import type { Address } from "@/lib/types";
 
@@ -18,9 +19,33 @@ export default function ProfileScreen() {
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
   const [address, setAddress] = useState<Address | null>(null);
+  const [editingAddr, setEditingAddr] = useState(false);
+  const [draftAddr, setDraftAddr] = useState<Address>(emptyAddress);
+  const [savingAddr, setSavingAddr] = useState(false);
 
   useEffect(() => { setFullName(profile?.fullName ?? ""); setPhone(profile?.phone ?? ""); }, [profile]);
   useFocusEffect(useCallback(() => { loadAddress().then(setAddress); }, []));
+
+  const startEditAddr = () => {
+    setDraftAddr({
+      ...emptyAddress,
+      ...(address ?? {}),
+      recipientName: address?.recipientName || profile?.fullName || "",
+      phone: address?.phone || profile?.phone || "",
+    });
+    setEditingAddr(true);
+  };
+
+  const saveAddr = async () => {
+    const err = validateAddress(draftAddr);
+    if (err) return Alert.alert("Adresse", err);
+    setSavingAddr(true);
+    const clean: Address = { ...draftAddr, phone: normalizePhone(draftAddr.phone) ?? draftAddr.phone };
+    await saveAddress(clean);
+    setAddress(clean);
+    setSavingAddr(false);
+    setEditingAddr(false);
+  };
 
   const save = async () => {
     if (fullName.trim().length < 2) return Alert.alert("Profil", "Indiquez votre nom.");
@@ -74,15 +99,27 @@ export default function ProfileScreen() {
 
             <View style={styles.box}>
               <Text style={styles.label}>Adresse de livraison</Text>
-              {address ? (
+              {editingAddr ? (
+                <>
+                  <AddressForm value={draftAddr} onChange={setDraftAddr} />
+                  <View style={styles.actions}>
+                    <Pressable onPress={() => setEditingAddr(false)} style={[fieldStyles.secondary, { flex: 1 }]}><Text style={fieldStyles.secondaryText}>Annuler</Text></Pressable>
+                    <Pressable onPress={saveAddr} disabled={savingAddr} style={[fieldStyles.primary, { flex: 1, height: 46 }, savingAddr && { opacity: 0.6 }]}><Text style={fieldStyles.primaryText}>{savingAddr ? "…" : "Enregistrer"}</Text></Pressable>
+                  </View>
+                </>
+              ) : address ? (
                 <>
                   <Text style={styles.value}>{address.recipientName} · {address.phone}</Text>
                   <Text style={styles.value}>{address.addressLine}</Text>
                   <Text style={styles.value}>{address.city}, {address.governorate}</Text>
-                  <Text style={styles.hint}>Modifiable à la prochaine commande.</Text>
+                  {address.notes ? <Text style={styles.hint}>« {address.notes} »</Text> : null}
+                  <Pressable onPress={startEditAddr} hitSlop={8}><Text style={fieldStyles.link}>Modifier</Text></Pressable>
                 </>
               ) : (
-                <Text style={styles.hint}>Enregistrée automatiquement à votre première commande.</Text>
+                <>
+                  <Text style={styles.hint}>Aucune adresse enregistrée. Elle sera pré-remplie à chaque commande.</Text>
+                  <Pressable onPress={startEditAddr} hitSlop={8}><Text style={fieldStyles.link}>Ajouter une adresse</Text></Pressable>
+                </>
               )}
             </View>
 

@@ -9,13 +9,15 @@ import { useCart } from "@/lib/cart";
 import { usePrefs } from "@/lib/prefs";
 import { shareProduct } from "@/lib/share";
 import { colors, formatPrice, radius } from "@/lib/theme";
-import type { Product } from "@/lib/types";
+import { unitsLeft } from "@/lib/data";
+import type { Post } from "@/lib/types";
 
-type Props = { product: Product; height: number; active: boolean };
+type Props = { post: Post; height: number; active: boolean };
 
 const DOUBLE_TAP_MS = 280;
 
-export function ProductReel({ product, height, active }: Props) {
+export function ProductReel({ post, height, active }: Props) {
+  const product = post.product;
   const router = useRouter();
   const { width } = useWindowDimensions();
   const { add } = useCart();
@@ -66,12 +68,21 @@ export function ProductReel({ product, height, active }: Props) {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
   };
 
-  const photos = product.images.length > 0 ? product.images : [""];
+  // The post's own media first, then the product's other photos to swipe through.
+  const photos = post.kind === "image" ? [post.url, ...product.images.filter((u) => u !== post.url)] : product.images;
+
+  // Availability shown on the reel — computed from the shared product object.
+  const availableSizes = product.variants.filter((v) => unitsLeft(product, v) > 0);
+  const soldOut = product.stock <= 0 || (product.variants.length > 0 && availableSizes.length === 0);
+  const lowest = product.variants.length > 0
+    ? Math.min(...availableSizes.map((v) => unitsLeft(product, v)))
+    : product.stock;
+  const scarce = !soldOut && lowest > 0 && lowest <= 5;
 
   return (
     <View style={{ height, backgroundColor: colors.ink }}>
-      {product.videoUrl ? (
-        <ReelVideo uri={product.videoUrl} poster={product.images[0]} active={active} muted={!sound} />
+      {post.kind === "video" ? (
+        <ReelVideo uri={post.url} poster={post.poster ?? product.images[0]} active={active} muted={!sound} />
       ) : photos.length > 1 ? (
         <FlatList
           data={photos}
@@ -95,19 +106,19 @@ export function ProductReel({ product, height, active }: Props) {
       <LinearGradient colors={["rgba(23,18,31,0)", "rgba(23,18,31,0.75)"]} style={styles.scrim} pointerEvents="none" />
 
       {/* video reels: the whole surface is tappable */}
-      {product.videoUrl ? <Pressable style={StyleSheet.absoluteFill} onPress={onTap} /> : null}
+      {post.kind === "video" ? <Pressable style={StyleSheet.absoluteFill} onPress={onTap} /> : null}
 
       <Animated.View pointerEvents="none" style={[styles.burst, { opacity: heart, transform: [{ scale: heart.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) }] }]}>
         <Text style={styles.burstHeart}>♥</Text>
       </Animated.View>
 
-      {photos.length > 1 && !product.videoUrl && (
+      {photos.length > 1 && post.kind !== "video" && (
         <View style={styles.dots} pointerEvents="none">
           {photos.map((_, i) => <View key={i} style={[styles.dot, i === photo && styles.dotOn]} />)}
         </View>
       )}
 
-      {product.videoUrl ? (
+      {post.kind === "video" ? (
         <Pressable onPress={() => { setSound(!sound); Haptics.selectionAsync().catch(() => {}); }} hitSlop={10} style={styles.sound}>
           <Text style={styles.soundText}>{sound ? "🔊" : "🔇"}</Text>
         </Pressable>
@@ -128,11 +139,17 @@ export function ProductReel({ product, height, active }: Props) {
           <Text style={styles.price}>{formatPrice(product.price)}</Text>
           {product.compareAt && product.compareAt > product.price ? <Text style={styles.compare}>{formatPrice(product.compareAt)}</Text> : null}
         </View>
+        {post.caption ? <Text style={styles.caption} numberOfLines={2}>{post.caption}</Text> : null}
         {product.variants.length > 0 ? (
-          <Text style={styles.sizes} numberOfLines={1}>Tailles : {product.variants.join(" · ")}</Text>
+          <Text style={styles.sizes} numberOfLines={1}>
+            {soldOut ? "Toutes les tailles sont épuisées" : `Dispo en ${availableSizes.join(" · ")}`}
+          </Text>
+        ) : null}
+        {scarce ? (
+          <View style={styles.scarce}><Text style={styles.scarceText}>{product.variants.length > 0 ? `Plus que ${lowest} sur certaines tailles` : `Plus que ${lowest} en stock`}</Text></View>
         ) : null}
         <Pressable onPress={open} style={styles.buy}>
-          <Text style={styles.buyText}>{product.stock <= 0 ? "Épuisé" : "Acheter"}</Text>
+          <Text style={styles.buyText}>{soldOut ? "Épuisé" : "Acheter"}</Text>
         </Pressable>
       </View>
     </View>
@@ -190,7 +207,10 @@ const styles = StyleSheet.create({
   name: { color: "#fff", fontSize: 30, fontWeight: "700", letterSpacing: -0.6, lineHeight: 34, marginTop: 4 },
   price: { color: "#fff", fontSize: 17, marginTop: 4 },
   compare: { color: "rgba(255,255,255,0.6)", fontSize: 14, textDecorationLine: "line-through" },
-  sizes: { color: "rgba(255,255,255,0.7)", fontSize: 12, marginTop: 4 },
+  caption: { color: "rgba(255,255,255,0.9)", fontSize: 14, marginTop: 6, lineHeight: 19 },
+  sizes: { color: "rgba(255,255,255,0.75)", fontSize: 12, marginTop: 6 },
+  scarce: { alignSelf: "flex-start", marginTop: 6, backgroundColor: "rgba(255,61,138,0.9)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
+  scarceText: { color: "#fff", fontSize: 12, fontWeight: "700" },
   buy: {
     alignSelf: "flex-start", marginTop: 14, backgroundColor: "#fff",
     paddingHorizontal: 20, paddingVertical: 11, borderRadius: radius.pill,

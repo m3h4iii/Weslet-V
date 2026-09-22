@@ -24,6 +24,17 @@ export type Product = {
   brand: Brand;
 };
 
+/** One reel in the feed: a video or photo published by a boutique about a product. */
+export type Post = {
+  id: string;
+  kind: "image" | "video";
+  url: string;
+  poster: string | null;
+  caption: string | null;
+  createdAt: string;
+  product: Product; // shared object per product within a load → same stock everywhere
+};
+
 export type Category = { id: number | null; slug: string; label: string };
 
 export type CartLine = {

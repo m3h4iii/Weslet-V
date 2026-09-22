@@ -4,11 +4,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Wordmark } from "@/components/Logo";
 import { ProductReel } from "@/components/ProductReel";
-import { fetchFeed, fitsSizes } from "@/lib/data";
+import { fetchFeed, fitsSizes, subscribeCatalog } from "@/lib/data";
 import { usePrefs } from "@/lib/prefs";
 import { Skeleton } from "@/components/Skeleton";
 import { colors } from "@/lib/theme";
-import type { Product } from "@/lib/types";
+import type { Post } from "@/lib/types";
 
 export default function FeedScreen() {
   const { height: winH } = useWindowDimensions();
@@ -21,11 +21,11 @@ export default function FeedScreen() {
   const seenSet = useRef(new Set<string>());
   useEffect(() => { seenSet.current = new Set(seen); }, [seen]);
   const [order, setOrder] = useState<string[] | null>(null); // frozen order for this session
-  const [all, setAll] = useState<Product[]>([]);
+  const [all, setAll] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [active, setActive] = useState(0);
-  const listRef = useRef<FlatList<Product>>(null);
+  const listRef = useRef<FlatList<Post>>(null);
   const lastLoad = useRef(0);
 
   const load = useCallback(async () => {
@@ -40,7 +40,7 @@ export default function FeedScreen() {
   }, []);
 
   const filterOn = sizeFilter && sizes.length > 0;
-  const base = filterOn ? all.filter((p) => fitsSizes(p, sizes)) : all;
+  const base = filterOn ? all.filter((p) => fitsSizes(p.product, sizes)) : all;
 
   // Unseen pieces first, then the ones already scrolled past — decided once per load
   // so the list doesn't reshuffle under the thumb while marking items seen.
@@ -49,14 +49,19 @@ export default function FeedScreen() {
     const s = new Set(seenSet.current);
     const unseen = all.filter((p) => !s.has(p.id)).map((p) => p.id);
     const old = all.filter((p) => s.has(p.id)).map((p) => p.id);
-    setOrder([...unseen, ...old]);
+    // Keep the current order if only data (stock) changed; reorder only when the set of posts changed.
+    setOrder((prev) => {
+      const next = [...unseen, ...old];
+      if (prev && prev.length === next.length && prev.every((id) => next.includes(id))) return prev;
+      return next;
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [all, prefsReady]);
 
   const items = (() => {
     if (!order) return base;
     const byId = new Map(base.map((p) => [p.id, p]));
-    return order.map((id) => byId.get(id)).filter((p): p is Product => !!p);
+    return order.map((id) => byId.get(id)).filter((p): p is Post => !!p);
   })();
   const unseenCount = items.filter((p) => !seenSet.current.has(p.id)).length;
 
@@ -67,6 +72,9 @@ export default function FeedScreen() {
   };
 
   useEffect(() => { load().finally(() => setLoading(false)); }, [load]);
+
+  // Someone ordered / a boutique changed stock or posted → quiet refetch, same order kept.
+  useEffect(() => subscribeCatalog(load), [load]);
 
   // Coming back to the tab after a while → silently refetch (new pieces, updated stock)
   useFocusEffect(useCallback(() => {
@@ -84,14 +92,14 @@ export default function FeedScreen() {
     const first = viewableItems.find((v) => v.isViewable);
     if (first?.index != null) {
       setActive(first.index);
-      const p = first.item as Product | undefined;
+      const p = first.item as Post | undefined;
       if (p?.id) { seenSet.current.add(p.id); markSeen(p.id); }
     }
   }).current;
 
   const renderItem = useCallback(
-    ({ item, index }: { item: Product; index: number }) => (
-      <ProductReel product={item} height={itemH} active={index === active} />
+    ({ item, index }: { item: Post; index: number }) => (
+      <ProductReel post={item} height={itemH} active={index === active} />
     ),
     [itemH, active],
   );

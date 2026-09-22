@@ -1,4 +1,4 @@
-import type { Brand, Product } from "./types";
+import type { Brand, Post, Product } from "./types";
 
 // Draft data so the app runs before the backend is wired.
 // Images: neutral placeholder cards (piece name on a soft background) until real product photos exist.
@@ -38,4 +38,14 @@ export const mockProducts: Product[] = [
   p("p10", "Kimono soie", 210, mockBrands[1], "kimono", 10, "Femme", ["Unique"]),
   p("p11", "Foulard brodé", 55, mockBrands[4], "scarf", 11, "Accessoires", []),
   p("p12", "Caftan court", 260, mockBrands[0], "caftan", 12, "Femme", ["S", "M"]),
+];
+
+// Feed posts: two posts for the first piece to show that stock stays in sync across posts.
+export const mockPosts: Post[] = [
+  { id: "post-1a", kind: "image", url: mockProducts[0].images[0], poster: null, caption: "Nouvelle collection · dispo en S / M / L", createdAt: "2026-09-20T10:00:00Z", product: mockProducts[0] },
+  ...mockProducts.slice(1).map((pr, i) => ({
+    id: `post-${pr.id}`, kind: "image" as const, url: pr.images[0], poster: null, caption: null,
+    createdAt: new Date(Date.parse("2026-09-19T10:00:00Z") - i * 3600_000).toISOString(), product: pr,
+  })),
+  { id: "post-1b", kind: "image", url: mockProducts[0].images[1], poster: null, caption: "Vue de dos — même pièce, même stock", createdAt: "2026-09-18T10:00:00Z", product: mockProducts[0] },
 ];

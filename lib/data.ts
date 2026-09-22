@@ -1,8 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "./supabase";
-import { mockBrands, mockProducts } from "./mock";
+import { mockBrands, mockPosts, mockProducts } from "./mock";
 import { DELIVERY_FEE } from "./address";
-import type { Address, Brand, CartLine, Category, Order, OrderStatus, Product } from "./types";
+import type { Address, Brand, CartLine, Category, Order, OrderStatus, Post, Product } from "./types";
 
 // "mock" until the Supabase keys are set, then "supabase".
 export const SOURCE = process.env.EXPO_PUBLIC_DATA_SOURCE ?? "mock";
@@ -94,11 +94,63 @@ export function unitsLeft(p: Product, variant: string | null): number {
   return p.stock;
 }
 
-export async function fetchFeed(): Promise<Product[]> {
+export async function fetchProducts(): Promise<Product[]> {
   if (IS_MOCK) return mockProducts;
   return selectProducts((sel) =>
     supabase.from("products").select(sel).eq("status", "active").order("created_at", { ascending: false }).limit(40),
   );
+}
+
+// ------------------------------------------------------------------
+// FEED = posts (07_posts.sql). Each post carries the SAME product object as
+// every other post of that product, so stock and sizes can't disagree.
+// Before the migration exists, the feed falls back to one post per product.
+// ------------------------------------------------------------------
+const POST_SELECT = "id, product_id, kind, url, poster_url, caption, created_at";
+
+export async function fetchFeed(): Promise<Post[]> {
+  if (IS_MOCK) return mockPosts;
+  const { data, error } = await supabase.from("posts").select(POST_SELECT).order("created_at", { ascending: false }).limit(80);
+  if (error || !data) return productsAsPosts(await fetchProducts());
+  const ids = [...new Set((data as any[]).map((r) => String(r.product_id)))];
+  if (ids.length === 0) return productsAsPosts(await fetchProducts());
+  const products = await selectProducts((sel) => supabase.from("products").select(sel).in("id", ids).eq("status", "active"));
+  const byId = new Map(products.map((p) => [p.id, p]));
+  const posts: Post[] = [];
+  for (const r of data as any[]) {
+    const product = byId.get(String(r.product_id));
+    if (!product) continue; // draft / archived product → post hidden
+    posts.push({
+      id: String(r.id),
+      kind: r.kind === "video" ? "video" : "image",
+      url: r.url,
+      poster: r.poster_url ?? product.images[0] ?? null,
+      caption: r.caption ?? null,
+      createdAt: r.created_at ?? "",
+      product,
+    });
+  }
+  return posts.length > 0 ? posts : productsAsPosts(await fetchProducts());
+}
+
+function productsAsPosts(products: Product[]): Post[] {
+  return products
+    .filter((p) => p.images.length > 0)
+    .map((p) => ({ id: `product-${p.id}`, kind: "image" as const, url: p.images[0], poster: null, caption: null, createdAt: "", product: p }));
+}
+
+/** Refetch when stock, sizes or posts change anywhere (merchant edits, someone orders). */
+export function subscribeCatalog(onChange: () => void): () => void {
+  if (IS_MOCK) return () => {};
+  let t: ReturnType<typeof setTimeout> | null = null;
+  const bump = () => { if (t) clearTimeout(t); t = setTimeout(onChange, 800); };
+  const channel = supabase
+    .channel("catalog")
+    .on("postgres_changes", { event: "*", schema: "public", table: "products" }, bump)
+    .on("postgres_changes", { event: "*", schema: "public", table: "product_variants" }, bump)
+    .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, bump)
+    .subscribe();
+  return () => { if (t) clearTimeout(t); supabase.removeChannel(channel); };
 }
 
 let categoryCache: Category[] | null = null;

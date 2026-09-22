@@ -19,7 +19,7 @@ export function ProductReel({ product, height, active }: Props) {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const { add } = useCart();
-  const { isFavorite, toggleFavorite } = usePrefs();
+  const { isFavorite, toggleFavorite, sound, setSound } = usePrefs();
   const liked = isFavorite(product.id);
   const [photo, setPhoto] = useState(0);
   const lastTap = useRef(0);
@@ -71,7 +71,7 @@ export function ProductReel({ product, height, active }: Props) {
   return (
     <View style={{ height, backgroundColor: colors.ink }}>
       {product.videoUrl ? (
-        <ReelVideo uri={product.videoUrl} poster={product.images[0]} active={active} />
+        <ReelVideo uri={product.videoUrl} poster={product.images[0]} active={active} muted={!sound} />
       ) : photos.length > 1 ? (
         <FlatList
           data={photos}
@@ -107,6 +107,12 @@ export function ProductReel({ product, height, active }: Props) {
         </View>
       )}
 
+      {product.videoUrl ? (
+        <Pressable onPress={() => { setSound(!sound); Haptics.selectionAsync().catch(() => {}); }} hitSlop={10} style={styles.sound}>
+          <Text style={styles.soundText}>{sound ? "🔊" : "🔇"}</Text>
+        </Pressable>
+      ) : null}
+
       <View style={styles.rail}>
         <RailButton label={liked ? "♥" : "♡"} tint={liked ? colors.pink : "#fff"} onPress={like} />
         <RailButton label="↗" onPress={() => shareProduct(product)} />
@@ -133,7 +139,7 @@ export function ProductReel({ product, height, active }: Props) {
   );
 }
 
-function ReelVideo({ uri, poster, active }: { uri: string; poster?: string; active: boolean }) {
+function ReelVideo({ uri, poster, active, muted }: { uri: string; poster?: string; active: boolean; muted: boolean }) {
   const player = useVideoPlayer(uri, (p) => {
     p.loop = true;
     p.muted = true;
@@ -141,6 +147,10 @@ function ReelVideo({ uri, poster, active }: { uri: string; poster?: string; acti
   useEffect(() => {
     if (active) player.play(); else player.pause();
   }, [active, player]);
+  useEffect(() => {
+    // only the visible reel is ever unmuted, so two clips never play sound at once
+    player.muted = muted || !active;
+  }, [muted, active, player]);
   return (
     <View style={StyleSheet.absoluteFill}>
       {poster ? <Image source={{ uri: poster }} style={StyleSheet.absoluteFill} contentFit="cover" /> : null}
@@ -165,6 +175,11 @@ const styles = StyleSheet.create({
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.45)" },
   dotOn: { backgroundColor: "#fff", width: 18 },
   rail: { position: "absolute", right: 14, bottom: 150, gap: 14, alignItems: "center" },
+  sound: {
+    position: "absolute", right: 14, bottom: 340, width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.35)", borderWidth: 1, borderColor: "rgba(255,255,255,0.3)",
+  },
+  soundText: { fontSize: 18 },
   railBtn: {
     width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center",
     backgroundColor: "rgba(255,255,255,0.18)", borderWidth: 1, borderColor: "rgba(255,255,255,0.35)",

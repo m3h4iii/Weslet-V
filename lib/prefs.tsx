@@ -27,14 +27,20 @@ type PrefsCtx = {
   setSizeFilter: (on: boolean) => void;
   recent: string[];
   markViewed: (id: string) => void;
+  /** reels the buyer has already scrolled past */
+  seen: string[];
+  markSeen: (id: string) => void;
+  sound: boolean;
+  setSound: (on: boolean) => void;
 };
 
 const Ctx = createContext<PrefsCtx | null>(null);
 const KEY = "weslet.prefs.v1";
 const MAX_RECENT = 20;
+const MAX_SEEN = 300;
 
-type State = { favorites: FavSnapshot[]; follows: string[]; sizes: string[]; sizeFilter: boolean; recent: string[] };
-const empty: State = { favorites: [], follows: [], sizes: [], sizeFilter: false, recent: [] };
+type State = { favorites: FavSnapshot[]; follows: string[]; sizes: string[]; sizeFilter: boolean; recent: string[]; seen: string[]; sound: boolean };
+const empty: State = { favorites: [], follows: [], sizes: [], sizeFilter: false, recent: [], seen: [], sound: false };
 
 export function PrefsProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<State>(empty);
@@ -83,6 +89,13 @@ export function PrefsProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const markSeen = useCallback((id: string) => {
+    setState((st) => {
+      if (st.seen.includes(id)) return st;
+      return { ...st, seen: [...st.seen, id].slice(-MAX_SEEN) };
+    });
+  }, []);
+
   const value = useMemo<PrefsCtx>(() => ({
     ready,
     favorites: state.favorites,
@@ -97,7 +110,11 @@ export function PrefsProvider({ children }: { children: React.ReactNode }) {
     setSizeFilter: (on) => setState((st) => ({ ...st, sizeFilter: on })),
     recent: state.recent,
     markViewed,
-  }), [ready, state, toggleFavorite, toggleFollow, markViewed]);
+    seen: state.seen,
+    markSeen,
+    sound: state.sound,
+    setSound: (on) => setState((st) => ({ ...st, sound: on })),
+  }), [ready, state, toggleFavorite, toggleFollow, markViewed, markSeen]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

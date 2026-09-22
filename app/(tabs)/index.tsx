@@ -17,7 +17,10 @@ export default function FeedScreen() {
   const itemH = winH - TAB_BAR - insets.bottom;
 
   const router = useRouter();
-  const { sizes, sizeFilter, setSizeFilter } = usePrefs();
+  const { sizes, sizeFilter, setSizeFilter, seen, markSeen, ready: prefsReady } = usePrefs();
+  const seenSet = useRef(new Set<string>());
+  useEffect(() => { seenSet.current = new Set(seen); }, [seen]);
+  const [order, setOrder] = useState<string[] | null>(null); // frozen order for this session
   const [all, setAll] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -37,7 +40,25 @@ export default function FeedScreen() {
   }, []);
 
   const filterOn = sizeFilter && sizes.length > 0;
-  const items = filterOn ? all.filter((p) => fitsSizes(p, sizes)) : all;
+  const base = filterOn ? all.filter((p) => fitsSizes(p, sizes)) : all;
+
+  // Unseen pieces first, then the ones already scrolled past — decided once per load
+  // so the list doesn't reshuffle under the thumb while marking items seen.
+  useEffect(() => {
+    if (!prefsReady || all.length === 0) return;
+    const s = new Set(seenSet.current);
+    const unseen = all.filter((p) => !s.has(p.id)).map((p) => p.id);
+    const old = all.filter((p) => s.has(p.id)).map((p) => p.id);
+    setOrder([...unseen, ...old]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [all, prefsReady]);
+
+  const items = (() => {
+    if (!order) return base;
+    const byId = new Map(base.map((p) => [p.id, p]));
+    return order.map((id) => byId.get(id)).filter((p): p is Product => !!p);
+  })();
+  const unseenCount = items.filter((p) => !seenSet.current.has(p.id)).length;
 
   const onSizeChip = () => {
     if (sizes.length === 0) return router.push("/sizes");
@@ -61,7 +82,11 @@ export default function FeedScreen() {
 
   const onViewable = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
     const first = viewableItems.find((v) => v.isViewable);
-    if (first?.index != null) setActive(first.index);
+    if (first?.index != null) {
+      setActive(first.index);
+      const p = first.item as Product | undefined;
+      if (p?.id) { seenSet.current.add(p.id); markSeen(p.id); }
+    }
   }).current;
 
   const renderItem = useCallback(
@@ -116,6 +141,11 @@ export default function FeedScreen() {
       <View style={[styles.header, { top: insets.top + 8 }]} pointerEvents="none">
         <Wordmark light />
       </View>
+      {active > 0 && unseenCount === 0 && items.length > 3 ? (
+        <Pressable onPress={() => listRef.current?.scrollToOffset({ offset: 0, animated: true })} style={[styles.toTop, { top: insets.top + 50 }]}>
+          <Text style={styles.toTopText}>Tout vu · revenir au début ↑</Text>
+        </Pressable>
+      ) : null}
       <View style={[styles.tools, { top: insets.top + 6 }]}>
         <Pressable onPress={onSizeChip} onLongPress={() => router.push("/sizes")} hitSlop={6} style={[styles.sizeChip, filterOn && styles.sizeChipOn]}>
           <Text style={[styles.sizeChipText, filterOn && { color: colors.ink }]}>
@@ -144,6 +174,8 @@ const styles = StyleSheet.create({
     width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center",
     backgroundColor: "rgba(255,255,255,0.18)", borderWidth: 1, borderColor: "rgba(255,255,255,0.35)",
   },
+  toTop: { position: "absolute", alignSelf: "center", paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: "rgba(0,0,0,0.45)", borderWidth: 1, borderColor: "rgba(255,255,255,0.3)" },
+  toTopText: { color: "#fff", fontSize: 12, fontWeight: "600" },
   emptyText: { color: "#fff", fontSize: 16, textAlign: "center" },
   emptyBtn: { backgroundColor: "#fff", paddingHorizontal: 18, paddingVertical: 10, borderRadius: 999 },
   emptyBtnText: { color: colors.ink, fontWeight: "700" },

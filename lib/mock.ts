@@ -50,5 +50,7 @@ export const mockPosts: Post[] = [
     id: `post-${pr.id}`, kind: "image" as const, url: pr.images[0], poster: null, caption: null,
     createdAt: new Date(Date.parse("2026-09-19T10:00:00Z") - i * 3600_000).toISOString(), product: pr,
   })),
-  { id: "post-1b", kind: "image", url: mockProducts[0].images[1], poster: null, caption: "Vue de dos — même pièce, même stock", createdAt: "2026-09-18T10:00:00Z", product: mockProducts[0] },
+  process.env.EXPO_PUBLIC_MOCK_VIDEO_2
+    ? { id: "post-1b", kind: "video", url: process.env.EXPO_PUBLIC_MOCK_VIDEO_2, poster: mockProducts[0].images[1], caption: "Vue de dos — même pièce, même stock", createdAt: "2026-09-18T10:00:00Z", product: mockProducts[0] }
+    : { id: "post-1b", kind: "image", url: mockProducts[0].images[1], poster: null, caption: "Vue de dos — même pièce, même stock", createdAt: "2026-09-18T10:00:00Z", product: mockProducts[0] },
 ];

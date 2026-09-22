@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { Animated, FlatList, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { useVideoPlayer, VideoView } from "expo-video";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useCart } from "@/lib/cart";
 import { usePrefs } from "@/lib/prefs";
 import { shareProduct } from "@/lib/share";
+import { SmartVideo } from "@/components/SmartVideo";
 import { colors, formatPrice, radius } from "@/lib/theme";
 import { unitsLeft } from "@/lib/data";
 import type { Post } from "@/lib/types";
@@ -82,7 +82,7 @@ export function ProductReel({ post, height, active }: Props) {
   return (
     <View style={{ height, backgroundColor: colors.ink }}>
       {post.kind === "video" ? (
-        <ReelVideo uri={post.url} poster={post.poster ?? product.images[0]} active={active} muted={!sound} />
+        <SmartVideo uri={post.url} poster={post.poster ?? product.images[0]} active={active} muted={!sound} width={width} height={height} />
       ) : photos.length > 1 ? (
         <FlatList
           data={photos}
@@ -154,34 +154,6 @@ export function ProductReel({ post, height, active }: Props) {
           <Text style={styles.buyText}>{soldOut ? "Épuisé" : "Acheter"}</Text>
         </Pressable>
       </View>
-    </View>
-  );
-}
-
-function ReelVideo({ uri, poster, active, muted }: { uri: string; poster?: string; active: boolean; muted: boolean }) {
-  const player = useVideoPlayer(uri, (p) => {
-    p.loop = true;
-    p.muted = true;
-  });
-  useEffect(() => {
-    if (active) player.play(); else player.pause();
-  }, [active, player]);
-  useEffect(() => {
-    // only the visible reel is ever unmuted, so two clips never play sound at once
-    player.muted = muted || !active;
-  }, [muted, active, player]);
-  return (
-    <View style={StyleSheet.absoluteFill}>
-      {poster ? <Image source={{ uri: poster }} style={StyleSheet.absoluteFill} contentFit="cover" /> : null}
-      <VideoView
-        player={player}
-        style={StyleSheet.absoluteFill}
-        contentFit="cover"
-        nativeControls={false}
-        playsInline
-        allowsPictureInPicture={false}
-        fullscreenOptions={{ enable: false }}
-      />
     </View>
   );
 }

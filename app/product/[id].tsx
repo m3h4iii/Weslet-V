@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { fetchProduct, fetchProductPosts, unitsLeft } from "@/lib/data";
-import { useVideoPlayer, VideoView } from "expo-video";
+import { SmartVideo } from "@/components/SmartVideo";
 import { useCart } from "@/lib/cart";
 import { usePrefs } from "@/lib/prefs";
 import { shareProduct } from "@/lib/share";
@@ -75,7 +75,7 @@ export default function ProductScreen() {
               onMomentumScrollEnd={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / width))}
               renderItem={({ item, index }) =>
                 item.kind === "video" ? (
-                  <GalleryVideo uri={item.url} poster={item.poster ?? undefined} active={index === slide} width={width} />
+                  <SmartVideo uri={item.url} poster={item.poster ?? undefined} active={index === slide} muted width={width} height={width * 1.3} />
                 ) : (
                   <Image source={{ uri: item.url }} style={{ width, height: width * 1.3 }} contentFit="cover" />
                 )
@@ -143,25 +143,6 @@ export default function ProductScreen() {
           </Text>
         </Pressable>
       </View>
-    </View>
-  );
-}
-
-function GalleryVideo({ uri, poster, active, width }: { uri: string; poster?: string; active: boolean; width: number }) {
-  const player = useVideoPlayer(uri, (pl) => { pl.loop = true; pl.muted = true; });
-  useEffect(() => { if (active) player.play(); else player.pause(); }, [active, player]);
-  return (
-    <View style={{ width, height: width * 1.3, backgroundColor: colors.ink }}>
-      {poster ? <Image source={{ uri: poster }} style={StyleSheet.absoluteFill} contentFit="cover" /> : null}
-      <VideoView
-        player={player}
-        style={StyleSheet.absoluteFill}
-        contentFit="cover"
-        nativeControls={false}
-        playsInline
-        allowsPictureInPicture={false}
-        fullscreenOptions={{ enable: false }}
-      />
     </View>
   );
 }

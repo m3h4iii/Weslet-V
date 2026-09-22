@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRootNavigationState, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { Field, fieldStyles } from "@/components/Field";
 import { useAuth } from "@/lib/auth";
@@ -16,6 +16,7 @@ export default function CheckoutScreen() {
   const insets = useSafeAreaInsets();
   const { lines, clear } = useCart();
   const { signedIn, ready, profile } = useAuth();
+  const navReady = !!useRootNavigationState()?.key;
   const [addr, setAddr] = useState<Address>(emptyAddress);
   const [govOpen, setGovOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -25,8 +26,8 @@ export default function CheckoutScreen() {
 
   // Must be signed in to order (the RPC checks auth.uid()).
   useEffect(() => {
-    if (ready && !signedIn) router.replace({ pathname: "/auth", params: { next: "/checkout" } });
-  }, [ready, signedIn, router]);
+    if (navReady && ready && !signedIn) router.replace({ pathname: "/auth", params: { next: "/checkout" } });
+  }, [navReady, ready, signedIn, router]);
 
   // Prefill from the last delivery address, then from the profile.
   useEffect(() => {

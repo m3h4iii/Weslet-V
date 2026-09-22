@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRootNavigationState, useRouter } from "expo-router";
 import { Field, fieldStyles } from "@/components/Field";
 import { Wordmark } from "@/components/Logo";
 import { useAuth } from "@/lib/auth";
@@ -15,6 +15,7 @@ export default function AuthScreen() {
   const router = useRouter();
   const { next } = useLocalSearchParams<{ next?: string }>();
   const { signedIn, profile, sendCode, verifyCode, updateProfile } = useAuth();
+  const navReady = !!useRootNavigationState()?.key;
 
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
@@ -24,17 +25,18 @@ export default function AuthScreen() {
   const [busy, setBusy] = useState(false);
   const codeRef = useRef<TextInput>(null);
 
-  const finish = () => (next ? router.replace(next as any) : router.back());
+  const finish = () => (next ? router.replace(next as any) : router.canGoBack() ? router.back() : router.replace("/(tabs)/profile"));
 
   // Already signed in (or mock mode): only the profile step can be useful.
   useEffect(() => {
+    if (!navReady) return;
     if (IS_MOCK) { finish(); return; }
     if (signedIn && step !== "profile") {
       if (profile && !profile.fullName) { setFullName(profile.fullName); setPhone(profile.phone); setStep("profile"); }
       else finish();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signedIn, profile]);
+  }, [signedIn, profile, navReady]);
 
   const onSend = async () => {
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) return Alert.alert("Email", "Entrez une adresse email valide.");
@@ -49,7 +51,7 @@ export default function AuthScreen() {
   };
 
   const onVerify = async () => {
-    if (code.trim().length < 6) return Alert.alert("Code", "Entrez le code à 6 chiffres reçu par email.");
+    if (code.trim().length < 6) return Alert.alert("Code", "Entrez le code reçu par email (6 à 10 chiffres).");
     setBusy(true);
     try {
       await verifyCode(email, code);
@@ -83,7 +85,7 @@ export default function AuthScreen() {
           {step === "email" && (
             <View style={styles.card}>
               <Text style={styles.h1}>Connexion</Text>
-              <Text style={styles.p}>Pas de mot de passe : on vous envoie un code à 6 chiffres par email.</Text>
+              <Text style={styles.p}>Pas de mot de passe : on vous envoie un code par email.</Text>
               <Field
                 label="Email"
                 value={email}
@@ -108,14 +110,14 @@ export default function AuthScreen() {
               <Text style={styles.p}>Envoyé à <Text style={{ color: colors.ink, fontWeight: "600" }}>{email.trim()}</Text>. Vérifiez aussi les spams.</Text>
               <Field
                 ref={codeRef}
-                label="Code à 6 chiffres"
+                label="Code reçu par email"
                 value={code}
-                onChangeText={(t) => setCode(t.replace(/\D/g, "").slice(0, 6))}
+                onChangeText={(t) => setCode(t.replace(/\D/g, "").slice(0, 10))}
                 placeholder="123456"
                 keyboardType="number-pad"
                 textContentType="oneTimeCode"
                 autoComplete="one-time-code"
-                maxLength={6}
+                maxLength={10}
                 style={styles.codeInput}
                 returnKeyType="done"
                 onSubmitEditing={onVerify}
@@ -155,6 +157,6 @@ const styles = StyleSheet.create({
   card: { padding: 18, borderRadius: radius.lg, backgroundColor: colors.mist, gap: 14 },
   h1: { fontSize: 26, fontWeight: "700", letterSpacing: -0.5, color: colors.ink },
   p: { fontSize: 15, color: colors.muted, lineHeight: 21 },
-  codeInput: { fontSize: 26, letterSpacing: 8, textAlign: "center", fontWeight: "700" },
+  codeInput: { fontSize: 24, letterSpacing: 4, textAlign: "center", fontWeight: "700" },
   rowLinks: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 4 },
 });

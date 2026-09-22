@@ -40,6 +40,7 @@ function rowToProduct(r: any): Product {
     category: r.category?.slug ?? null,
     variants: [],
     variantIds: {},
+    variantStock: {},
     brand: {
       id: String(m.id ?? r.merchant_id ?? ""),
       name: m.name ?? "",
@@ -73,10 +74,16 @@ async function attachVariants(products: Product[]) {
   for (const v of data as any[]) {
     const p = byProduct.get(String(v.product_id));
     if (!p) continue;
-    if (Number(v.stock_qty ?? 0) <= 0) continue;
     p.variants.push(v.name);
     p.variantIds[v.name] = String(v.id);
+    p.variantStock[v.name] = Number(v.stock_qty ?? 0);
   }
+}
+
+/** Units available for a product (optionally a given size). Mock products are always available. */
+export function unitsLeft(p: Product, variant: string | null): number {
+  if (variant != null && p.variantStock[variant] != null) return p.variantStock[variant];
+  return p.stock;
 }
 
 export async function fetchFeed(): Promise<Product[]> {

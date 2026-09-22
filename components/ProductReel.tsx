@@ -35,7 +35,8 @@ export function ProductReel({ product, height, active }: Props) {
         <RailButton
           label="+"
           onPress={() => {
-            add(product, product.variants[0] ?? null);
+            if (product.variants.length > 0 || product.stock <= 0) return open();
+            add(product, null);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           }}
         />

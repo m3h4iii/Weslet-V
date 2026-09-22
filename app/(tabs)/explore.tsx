@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ProductCard } from "@/components/ProductCard";
 import { fetchCategories, searchProducts } from "@/lib/data";
@@ -33,12 +33,12 @@ export default function ExploreScreen() {
           autoCorrect={false}
         />
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips} style={styles.chipsRow}>
+      <View style={styles.chips}>
         <Chip label="Tout" active={cat === null} onPress={() => setCat(null)} />
         {cats.map((c) => (
           <Chip key={c.slug} label={c.label} active={cat === c.slug} onPress={() => setCat(cat === c.slug ? null : c.slug)} />
         ))}
-      </ScrollView>
+      </View>
       <FlatList
         data={items}
         keyExtractor={(p) => p.id}
@@ -67,8 +67,7 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, backgroundColor: colors.mist,
   },
   input: { flex: 1, fontSize: 16, color: colors.ink },
-  chipsRow: { flexGrow: 0, height: 54 },
-  chips: { flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingTop: 12, alignItems: "center" },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 6 },
   chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.line },
   chipOn: { backgroundColor: colors.ink, borderColor: colors.ink },
   chipText: { fontSize: 14, color: colors.ink },

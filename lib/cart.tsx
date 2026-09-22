@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { unitsLeft } from "./data";
 import type { CartLine, Product } from "./types";
 
 type CartCtx = {
@@ -39,12 +40,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           const i = prev.findIndex((l) => same(l, product.id, variant));
           if (i === -1) return [...prev, { product, variant, qty: 1 }];
           const next = [...prev];
-          next[i] = { ...next[i], qty: next[i].qty + 1 };
+          next[i] = { ...next[i], qty: Math.min(next[i].qty + 1, Math.max(1, unitsLeft(product, variant))) };
           return next;
         }),
       setQty: (id, variant, qty) =>
         setLines((prev) =>
-          qty <= 0 ? prev.filter((l) => !same(l, id, variant)) : prev.map((l) => (same(l, id, variant) ? { ...l, qty } : l)),
+          qty <= 0
+            ? prev.filter((l) => !same(l, id, variant))
+            : prev.map((l) => (same(l, id, variant) ? { ...l, qty: Math.min(qty, Math.max(1, unitsLeft(l.product, variant))) } : l)),
         ),
       clear: () => setLines([]),
     };

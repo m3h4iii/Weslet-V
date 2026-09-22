@@ -17,7 +17,8 @@ export type Product = {
   videoUrl: string | null; // optional reel video
   category: string | null; // category slug
   variants: string[];      // e.g. sizes or colours; empty if none
-  variantIds: Record<string, string>; // variant name -> product_variants.id (empty in mock mode)
+  variantIds: Record<string, string>;   // variant name -> product_variants.id (empty in mock mode)
+  variantStock: Record<string, number>; // variant name -> units left (missing = not tracked per size)
   brand: Brand;
 };
 

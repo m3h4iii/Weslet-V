@@ -8,6 +8,9 @@ Reels-style feed of pieces from Tunisian creators, plus search. Expo SDK 57, Exp
 - `app/(tabs)/bag.tsx` — cart grouped by boutique (persisted on device), 7 DT delivery per boutique.
 - `app/(tabs)/profile.tsx` — account: name/phone, saved delivery address, link to orders.
 - `app/product/[id].tsx` — photos, variants, add to bag.
+- `app/boutique/[id].tsx` — brand page: logo, city, Instagram, follow, all pieces.
+- `app/favorites.tsx` — saved pieces (♡ or double-tap on a reel), with price-drop / sold-out hints.
+- `app/sizes.tsx` — the buyer's sizes; "Ma taille" on the feed shows only pieces available in them.
 - `app/auth.tsx` — sign-in: email → 6-digit code (Supabase OTP, same email template as the dashboard) → name/phone.
 - `app/checkout.tsx` — delivery form (24 governorates), per-boutique summary, calls the `place_order` RPC once per boutique.
 - `app/orders/index.tsx`, `app/orders/[id].tsx` — order history and tracking timeline (live via Supabase realtime).
@@ -25,6 +28,7 @@ In supabase mode, checkout requires sign-in (the RPC checks `auth.uid()`).
 ## Environment variables
 - `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY` — from Supabase → Project Settings → API.
 - `EXPO_PUBLIC_DATA_SOURCE` — `mock` or `supabase`.
+- `EXPO_PUBLIC_WEB_URL` — public address of the web app (e.g. `https://weslet.netlify.app`), used in shared links from Expo Go / native builds.
 Set them on Netlify (Site configuration → Environment variables) and on expo.dev (Environment variables, Preview).
 
 ## Ship without a local setup

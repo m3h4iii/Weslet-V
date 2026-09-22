@@ -4,6 +4,8 @@ export type Brand = {
   slug: string;
   city: string | null;
   logoUrl: string | null;
+  instagram: string | null;
+  bio: string | null;
 };
 
 export type Product = {

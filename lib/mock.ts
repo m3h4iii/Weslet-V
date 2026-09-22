@@ -2,15 +2,15 @@ import type { Brand, Product } from "./types";
 
 // Draft data so the app runs before the backend is wired.
 // Images: neutral placeholder cards (piece name on a soft background) until real product photos exist.
-const b = (id: string, name: string, slug: string, city: string): Brand => ({ id, name, slug, city, logoUrl: null });
+const b = (id: string, name: string, slug: string, city: string, bio: string): Brand => ({ id, name, slug, city, logoUrl: null, instagram: slug.replace("-", ""), bio });
 
 export const mockBrands: Brand[] = [
-  b("b1", "Dar Sabra", "dar-sabra", "Tunis"),
-  b("b2", "Medina Mode", "medina-mode", "Sousse"),
-  b("b3", "Sfax Atelier", "sfax-atelier", "Sfax"),
-  b("b4", "Nour & Co", "nour-co", "La Marsa"),
-  b("b5", "Atelier Nabeul", "atelier-nabeul", "Nabeul"),
-  b("b6", "Kairouan Studio", "kairouan-studio", "Kairouan"),
+  b("b1", "Dar Sabra", "dar-sabra", "Tunis", "Broderie main et lin lavé, cousus à Tunis."),
+  b("b2", "Medina Mode", "medina-mode", "Sousse", "Pièces légères pour la ville et la plage."),
+  b("b3", "Sfax Atelier", "sfax-atelier", "Sfax", "Maroquinerie pleine fleur, fait main."),
+  b("b4", "Nour & Co", "nour-co", "La Marsa", "Bijoux dorés inspirés du jasmin."),
+  b("b5", "Atelier Nabeul", "atelier-nabeul", "Nabeul", "Chemises et foulards brodés."),
+  b("b6", "Kairouan Studio", "kairouan-studio", "Kairouan", "La chéchia, revisitée."),
 ];
 
 const TONES = ["EDE7F9", "F9E4EC", "FBF0DC", "E6EEF8", "EEE9E3"];

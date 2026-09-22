@@ -21,7 +21,7 @@ const toDinars = (millimes: any) => Number(millimes ?? 0) / 1000;
 const PRODUCT_SELECT = `
   id, merchant_id, title, description, price_millimes, compare_at_millimes, stock_qty, images, video_url, status,
   category:categories ( id, slug, name_fr ),
-  merchant:merchants ( id, name, slug, city, logo_url )
+  merchant:merchants ( id, name, slug, city, logo_url, instagram_handle, bio )
 `;
 // video_url is not in the base schema; if the select fails on it we retry without it.
 const PRODUCT_SELECT_NO_VIDEO = PRODUCT_SELECT.replace("video_url, ", "");
@@ -47,9 +47,17 @@ function rowToProduct(r: any): Product {
       slug: m.slug ?? "",
       city: m.city ?? null,
       logoUrl: m.logo_url ?? null,
+      instagram: m.instagram_handle ?? null,
+      bio: m.bio ?? null,
     },
   };
 }
+
+const BRAND_SELECT = "id, name, slug, city, logo_url, instagram_handle, bio";
+const rowToBrand = (b: any): Brand => ({
+  id: String(b.id), name: b.name ?? "", slug: b.slug ?? "", city: b.city ?? null, logoUrl: b.logo_url ?? null,
+  instagram: b.instagram_handle ?? null, bio: b.bio ?? null,
+});
 
 async function selectProducts(build: (sel: string) => any): Promise<Product[]> {
   let { data, error } = await build(PRODUCT_SELECT);
@@ -139,11 +147,41 @@ export async function fetchProduct(id: string): Promise<Product | null> {
 
 export async function fetchBrands(): Promise<Brand[]> {
   if (IS_MOCK) return mockBrands;
-  const { data, error } = await supabase.from("merchants").select("id, name, slug, city, logo_url").eq("status", "active").limit(50);
+  const { data, error } = await supabase.from("merchants").select(BRAND_SELECT).eq("status", "active").limit(50);
   if (error) throw error;
-  return (data ?? []).map((b: any) => ({
-    id: String(b.id), name: b.name, slug: b.slug, city: b.city ?? null, logoUrl: b.logo_url ?? null,
-  }));
+  return (data ?? []).map(rowToBrand);
+}
+
+export async function fetchBrand(id: string): Promise<Brand | null> {
+  if (IS_MOCK) return mockBrands.find((b) => b.id === id) ?? null;
+  const { data, error } = await supabase.from("merchants").select(BRAND_SELECT).eq("id", id).maybeSingle();
+  if (error || !data) return null;
+  return rowToBrand(data);
+}
+
+export async function fetchBrandProducts(brandId: string): Promise<Product[]> {
+  if (IS_MOCK) return mockProducts.filter((p) => p.brand.id === brandId);
+  return selectProducts((sel) =>
+    supabase.from("products").select(sel).eq("merchant_id", brandId).in("status", ["active", "out_of_stock"]).order("created_at", { ascending: false }).limit(80),
+  );
+}
+
+/** Keeps the order of `ids`; silently drops pieces that no longer exist. */
+export async function fetchProductsByIds(ids: string[]): Promise<Product[]> {
+  if (ids.length === 0) return [];
+  let rows: Product[];
+  if (IS_MOCK) rows = mockProducts.filter((p) => ids.includes(p.id));
+  else rows = await selectProducts((sel) => supabase.from("products").select(sel).in("id", ids).limit(100));
+  const byId = new Map(rows.map((p) => [p.id, p]));
+  return ids.map((id) => byId.get(id)).filter((p): p is Product => !!p);
+}
+
+/** True when the piece exists in at least one of the buyer's sizes (one-size pieces always pass). */
+export function fitsSizes(p: Product, sizes: string[]): boolean {
+  if (sizes.length === 0) return true;
+  if (p.variants.length === 0) return p.stock > 0;
+  const mine = new Set(sizes.map((s) => s.toUpperCase()));
+  return p.variants.some((v) => mine.has(v.toUpperCase()) && unitsLeft(p, v) > 0);
 }
 
 // ------------------------------------------------------------------

@@ -6,6 +6,9 @@ import { useCallback } from "react";
 import { Field, fieldStyles } from "@/components/Field";
 import { AddressForm } from "@/components/AddressForm";
 import { useAuth } from "@/lib/auth";
+import { usePrefs } from "@/lib/prefs";
+import { fetchBrands } from "@/lib/data";
+import type { Brand } from "@/lib/types";
 import { IS_MOCK } from "@/lib/data";
 import { emptyAddress, loadAddress, normalizePhone, saveAddress, validateAddress } from "@/lib/address";
 import { colors, radius } from "@/lib/theme";
@@ -14,6 +17,12 @@ import type { Address } from "@/lib/types";
 export default function ProfileScreen() {
   const router = useRouter();
   const { ready, signedIn, profile, updateProfile, signOut } = useAuth();
+  const { favorites, sizes, follows } = usePrefs();
+  const [followed, setFollowed] = useState<Brand[]>([]);
+  useEffect(() => {
+    if (follows.length === 0) return setFollowed([]);
+    fetchBrands().then((bs) => setFollowed(bs.filter((b) => follows.includes(b.id)))).catch(() => {});
+  }, [follows]);
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -60,6 +69,26 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.screen} edges={["top"]}>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
         <Text style={styles.title}>Profil</Text>
+
+        <Pressable onPress={() => router.push("/favorites")} style={styles.rowBtn}>
+          <Text style={styles.rowBtnText}>Favoris</Text>
+          <Text style={styles.rowMeta}>{favorites.length > 0 ? `${favorites.length}  ›` : "›"}</Text>
+        </Pressable>
+        <Pressable onPress={() => router.push("/sizes")} style={styles.rowBtn}>
+          <Text style={styles.rowBtnText}>Mes tailles</Text>
+          <Text style={styles.rowMeta} numberOfLines={1}>{sizes.length > 0 ? `${sizes.join(" · ")}  ›` : "À définir  ›"}</Text>
+        </Pressable>
+        {followed.length > 0 ? (
+          <View style={styles.box}>
+            <Text style={styles.label}>Boutiques suivies</Text>
+            {followed.map((b) => (
+              <Pressable key={b.id} onPress={() => router.push({ pathname: "/boutique/[id]", params: { id: b.id } })} style={styles.brandRow}>
+                <Text style={styles.value}>{b.name}</Text>
+                <Text style={styles.hint}>{b.city ?? ""}  ›</Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
 
         {!ready ? null : !signedIn ? (
           <View style={styles.box}>
@@ -152,5 +181,7 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
   },
   rowBtnText: { fontSize: 16, fontWeight: "600", color: colors.ink },
+  rowMeta: { fontSize: 14, color: colors.muted, maxWidth: "60%" },
+  brandRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 4 },
   chev: { fontSize: 22, color: colors.muted },
 });

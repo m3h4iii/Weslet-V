@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Animated, FlatList, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Animated, FlatList, Pressable, StyleSheet, Text, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -74,6 +74,10 @@ export function ProductReel({ post, height, active }: Props) {
 
   // The post's own media first, then the product's other photos to swipe through.
   const photos = post.kind === "image" ? [post.url, ...product.images.filter((u) => u !== post.url)] : product.images;
+  const onSwipe = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const i = Math.max(0, Math.min(photos.length - 1, Math.round(e.nativeEvent.contentOffset.x / width)));
+    setPhoto((cur) => (cur === i ? cur : i));
+  };
 
   // Availability shown on the reel — computed from the shared product object.
   const availableSizes = product.variants.filter((v) => unitsLeft(product, v) > 0);
@@ -94,7 +98,10 @@ export function ProductReel({ post, height, active }: Props) {
           pagingEnabled
           showsHorizontalScrollIndicator={false}
           keyExtractor={(u, i) => `${i}-${u}`}
-          onMomentumScrollEnd={(e) => setPhoto(Math.round(e.nativeEvent.contentOffset.x / width))}
+          // web never fires onMomentumScrollEnd → track the page from onScroll too
+          onScroll={onSwipe}
+          scrollEventThrottle={16}
+          onMomentumScrollEnd={onSwipe}
           renderItem={({ item }) => (
             <Pressable onPress={onTap} style={{ width, height }}>
               <Image source={{ uri: item }} style={StyleSheet.absoluteFill} contentFit="cover" transition={300} />

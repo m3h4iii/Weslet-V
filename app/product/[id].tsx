@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -51,6 +51,12 @@ export default function ProductScreen() {
     ...posts.filter((x) => x.kind === "image" && !p.images.includes(x.url)).map((x) => ({ key: x.id, kind: "image" as const, url: x.url })),
   ];
 
+  // web never fires onMomentumScrollEnd → track the page from onScroll too
+  const onSwipe = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const i = Math.max(0, Math.min(slides.length - 1, Math.round(e.nativeEvent.contentOffset.x / width)));
+    setSlide((cur) => (cur === i ? cur : i));
+  };
+
   const addToBag = () => {
     if (!canAdd) return;
     add(p, variant);
@@ -74,7 +80,9 @@ export default function ProductScreen() {
               pagingEnabled
               showsHorizontalScrollIndicator={false}
               keyExtractor={(sl) => sl.key}
-              onMomentumScrollEnd={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / width))}
+              onScroll={onSwipe}
+              scrollEventThrottle={16}
+              onMomentumScrollEnd={onSwipe}
               renderItem={({ item, index }) =>
                 item.kind === "video" ? (
                   <SmartVideo uri={item.url} poster={item.poster ?? undefined} active={index === slide} muted width={width} height={width * 1.3} />

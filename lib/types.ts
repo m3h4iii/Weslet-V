@@ -88,3 +88,17 @@ export type Order = {
   tracking: string | null;
   events: OrderEvent[];
 };
+
+export type Rating = { count: number; avg: number | null };
+
+export type Review = {
+  id: string;
+  orderId: string;
+  merchantId: string;
+  rating: number;        // 1–5
+  comment: string | null;
+  reply: string | null;  // boutique's public answer
+  repliedAt: string | null;
+  createdAt: string;
+  author: string;        // first name only
+};

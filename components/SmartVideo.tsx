@@ -24,13 +24,44 @@ export function SmartVideo({ uri, poster, active, muted, width, height }: Props)
   });
   const aspect = useVideoAspect(player);
 
+  // Autoplay rules (iOS Safari especially): a video only starts on its own when
+  // it is muted. So: start muted, then unmute once it is really playing if the
+  // buyer wants sound. If the browser refuses, fall back to muted playback.
   useEffect(() => {
-    if (active) player.play(); else player.pause();
-  }, [active, player]);
-  useEffect(() => {
-    // only the visible video is ever unmuted
-    player.muted = muted || !active;
-  }, [muted, active, player]);
+    if (!active) { player.pause(); player.muted = true; return; }
+    let cancelled = false;
+    const el = () => { const v: Set<HTMLVideoElement> | undefined = (player as any)._mountedVideos; return v ? [...v][0] : undefined; };
+
+    const start = () => {
+      if (cancelled) return;
+      player.muted = true;
+      const e = el();
+      if (e) {
+        e.muted = true;
+        e.play().catch(() => {});
+      } else {
+        player.play();
+      }
+      if (!muted) {
+        // give it a moment to be actually playing, then try with sound
+        setTimeout(() => {
+          if (cancelled) return;
+          const v = el();
+          player.muted = false;
+          if (v) {
+            v.muted = false;
+            if (v.paused) v.play().catch(() => { v.muted = true; player.muted = true; v.play().catch(() => {}); });
+          }
+        }, 350);
+      }
+    };
+
+    start();
+    // Not ready yet (source still loading)? Play as soon as it is.
+    const sub = player.addListener("statusChange", (e) => { if (e.status === "readyToPlay") start(); });
+    const t = setTimeout(start, 600); // late element mount on web
+    return () => { cancelled = true; clearTimeout(t); sub.remove(); };
+  }, [active, muted, player]);
 
   const box = width / height;
   // Unknown size yet → assume phone-shaped (most uploads). Within ~20% of the box → fill (9:16 on any phone).

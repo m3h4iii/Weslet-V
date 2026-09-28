@@ -2,17 +2,21 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { fetchOrder, subscribeOrder } from "@/lib/data";
+import { fetchOrder, myReviewForOrder, subscribeOrder } from "@/lib/data";
 import { STATUS_DESC, STATUS_LABEL, TIMELINE, formatDate, isTerminalFailure, statusTone } from "@/lib/orders";
 import { colors, formatPrice, radius } from "@/lib/theme";
-import type { Order, OrderStatus } from "@/lib/types";
+import type { Order, OrderStatus, Review } from "@/lib/types";
 
 export default function OrderScreen() {
   const router = useRouter();
   const { id, placed } = useLocalSearchParams<{ id: string; placed?: string }>();
   const [order, setOrder] = useState<Order | null | undefined>(undefined);
+  const [review, setReview] = useState<Review | null>(null);
 
-  const load = useCallback(() => { fetchOrder(id).then(setOrder).catch(() => setOrder(null)); }, [id]);
+  const load = useCallback(() => {
+    fetchOrder(id).then(setOrder).catch(() => setOrder(null));
+    myReviewForOrder(id).then(setReview).catch(() => {});
+  }, [id]);
 
   useEffect(() => {
     load();
@@ -134,6 +138,13 @@ export default function OrderScreen() {
           </View>
         )}
 
+        {order.status === "delivered" ? (
+          <Pressable onPress={() => router.push({ pathname: "/review/[orderId]", params: { orderId: order.id } })} style={styles.reviewBtn}>
+            <Text style={styles.reviewText}>
+              {review ? `Votre avis : ${"★".repeat(review.rating)}${"☆".repeat(5 - review.rating)} · modifier` : `Noter ${order.merchant.name} ★`}
+            </Text>
+          </Pressable>
+        ) : null}
         <Pressable onPress={() => router.replace("/(tabs)")} style={styles.secondary}>
           <Text style={styles.secondaryText}>Continuer mes achats</Text>
         </Pressable>
@@ -205,6 +216,8 @@ const styles = StyleSheet.create({
   eventStatus: { fontSize: 14, fontWeight: "600", color: colors.ink },
   eventTime: { fontSize: 12, color: colors.muted },
   eventNote: { fontSize: 13, color: colors.muted, marginTop: 2 },
+  reviewBtn: { height: 50, borderRadius: radius.pill, alignItems: "center", justifyContent: "center", backgroundColor: colors.ink },
+  reviewText: { color: "#fff", fontSize: 15, fontWeight: "700" },
   secondary: { height: 48, borderRadius: radius.pill, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.line },
   secondaryText: { color: colors.ink, fontSize: 15, fontWeight: "600" },
 });

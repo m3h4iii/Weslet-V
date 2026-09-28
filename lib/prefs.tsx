@@ -32,15 +32,21 @@ type PrefsCtx = {
   markSeen: (id: string) => void;
   sound: boolean;
   setSound: (on: boolean) => void;
+  notif: Notif;
+  setNotif: (n: Partial<Notif>) => void;
+  termsAccepted: string | null;      // version accepted on this device
+  setTermsAccepted: (version: string) => void;
 };
+
+export type Notif = { orders: boolean; drops: boolean; promos: boolean };
 
 const Ctx = createContext<PrefsCtx | null>(null);
 const KEY = "weslet.prefs.v1";
 const MAX_RECENT = 20;
 const MAX_SEEN = 300;
 
-type State = { favorites: FavSnapshot[]; follows: string[]; sizes: string[]; sizeFilter: boolean; recent: string[]; seen: string[]; sound: boolean };
-const empty: State = { favorites: [], follows: [], sizes: [], sizeFilter: false, recent: [], seen: [], sound: false };
+type State = { favorites: FavSnapshot[]; follows: string[]; sizes: string[]; sizeFilter: boolean; recent: string[]; seen: string[]; sound: boolean; notif: Notif; termsAccepted: string | null };
+const empty: State = { favorites: [], follows: [], sizes: [], sizeFilter: false, recent: [], seen: [], sound: false, notif: { orders: true, drops: true, promos: false }, termsAccepted: null };
 
 export function PrefsProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<State>(empty);
@@ -114,6 +120,10 @@ export function PrefsProvider({ children }: { children: React.ReactNode }) {
     markSeen,
     sound: state.sound,
     setSound: (on) => setState((st) => ({ ...st, sound: on })),
+    notif: state.notif,
+    setNotif: (n) => setState((st) => ({ ...st, notif: { ...st.notif, ...n } })),
+    termsAccepted: state.termsAccepted,
+    setTermsAccepted: (version) => setState((st) => ({ ...st, termsAccepted: version })),
   }), [ready, state, toggleFavorite, toggleFollow, markViewed, markSeen]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

@@ -68,7 +68,10 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={["top"]}>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        <Text style={styles.title}>Profil</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingRight: 12 }}>
+          <Text style={styles.title}>Profil</Text>
+          <Pressable onPress={() => router.push("/settings")} hitSlop={10} style={styles.gear}><Text style={{ fontSize: 22, color: colors.ink }}>⚙</Text></Pressable>
+        </View>
 
         <Pressable onPress={() => router.push("/favorites")} style={styles.rowBtn}>
           <Text style={styles.rowBtnText}>Favoris</Text>
@@ -166,6 +169,7 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.white },
+  gear: { width: 40, height: 40, alignItems: "center", justifyContent: "center", marginTop: 8 },
   title: { fontSize: 28, fontWeight: "700", letterSpacing: -0.6, paddingHorizontal: 16, paddingTop: 8, color: colors.ink },
   box: { margin: 16, marginBottom: 0, padding: 18, borderRadius: radius.lg, backgroundColor: colors.mist, gap: 10 },
   h2: { fontSize: 20, fontWeight: "700", color: colors.ink, letterSpacing: -0.3 },

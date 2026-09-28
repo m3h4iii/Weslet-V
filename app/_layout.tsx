@@ -4,6 +4,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { CartProvider } from "@/lib/cart";
 import { AuthProvider } from "@/lib/auth";
 import { PrefsProvider } from "@/lib/prefs";
+import { TermsGate } from "@/components/TermsGate";
 
 export default function RootLayout() {
   return (
@@ -22,7 +23,11 @@ export default function RootLayout() {
             <Stack.Screen name="boutique/[id]" />
             <Stack.Screen name="favorites" />
             <Stack.Screen name="sizes" options={{ presentation: "modal" }} />
+            <Stack.Screen name="settings" />
+            <Stack.Screen name="legal/[slug]" />
+            <Stack.Screen name="review/[orderId]" options={{ presentation: "modal" }} />
           </Stack>
+          <TermsGate />
         </CartProvider>
         </PrefsProvider>
       </AuthProvider>

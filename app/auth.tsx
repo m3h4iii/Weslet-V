@@ -5,7 +5,9 @@ import { useLocalSearchParams, useRootNavigationState, useRouter } from "expo-ro
 import { Field, fieldStyles } from "@/components/Field";
 import { Wordmark } from "@/components/Logo";
 import { useAuth } from "@/lib/auth";
-import { IS_MOCK } from "@/lib/data";
+import { IS_MOCK, acceptTerms } from "@/lib/data";
+import { TERMS_VERSION } from "@/lib/legal";
+import { usePrefs } from "@/lib/prefs";
 import { normalizePhone } from "@/lib/address";
 import { colors, radius } from "@/lib/theme";
 
@@ -23,6 +25,8 @@ export default function AuthScreen() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
+  const [agree, setAgree] = useState(false);
+  const { setTermsAccepted } = usePrefs();
   const codeRef = useRef<TextInput>(null);
 
   const finish = () => (next ? router.replace(next as any) : router.canGoBack() ? router.back() : router.replace("/(tabs)/profile"));
@@ -40,6 +44,7 @@ export default function AuthScreen() {
 
   const onSend = async () => {
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) return Alert.alert("Email", "Entrez une adresse email valide.");
+    if (!agree) return Alert.alert("Conditions", "Acceptez les conditions d'utilisation et la politique de confidentialité pour continuer.");
     setBusy(true);
     try {
       await sendCode(email);
@@ -55,6 +60,8 @@ export default function AuthScreen() {
     setBusy(true);
     try {
       await verifyCode(email, code);
+      setTermsAccepted(TERMS_VERSION);
+      acceptTerms(TERMS_VERSION).catch(() => {});
       // onAuthStateChange → the effect above decides: profile step or finish.
     } catch (e: any) {
       Alert.alert("Connexion", e.message ?? "Code invalide.");
@@ -98,6 +105,15 @@ export default function AuthScreen() {
                 returnKeyType="send"
                 onSubmitEditing={onSend}
               />
+              <Pressable onPress={() => setAgree((v) => !v)} style={styles.agreeRow} hitSlop={6}>
+                <View style={[styles.checkbox, agree && styles.checkboxOn]}>{agree ? <Text style={styles.check}>✓</Text> : null}</View>
+                <Text style={styles.agreeText}>
+                  J'accepte les{" "}
+                  <Text style={styles.link} onPress={() => router.push({ pathname: "/legal/[slug]", params: { slug: "cgu" } })}>conditions d'utilisation</Text>
+                  {" et la "}
+                  <Text style={styles.link} onPress={() => router.push({ pathname: "/legal/[slug]", params: { slug: "confidentialite" } })}>politique de confidentialité</Text>.
+                </Text>
+              </Pressable>
               <Pressable onPress={onSend} disabled={busy} style={[fieldStyles.primary, busy && { opacity: 0.6 }]}>
                 <Text style={fieldStyles.primaryText}>{busy ? "Envoi…" : "Recevoir le code"}</Text>
               </Pressable>
@@ -159,4 +175,10 @@ const styles = StyleSheet.create({
   p: { fontSize: 15, color: colors.muted, lineHeight: 21 },
   codeInput: { fontSize: 24, letterSpacing: 4, textAlign: "center", fontWeight: "700" },
   rowLinks: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 4 },
+  agreeRow: { flexDirection: "row", gap: 10, alignItems: "flex-start" },
+  checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: colors.muted, alignItems: "center", justifyContent: "center", marginTop: 1 },
+  checkboxOn: { backgroundColor: colors.ink, borderColor: colors.ink },
+  check: { color: "#fff", fontSize: 14, fontWeight: "800" },
+  agreeText: { flex: 1, fontSize: 13, lineHeight: 19, color: "#3D3649" },
+  link: { color: colors.violet, fontWeight: "600", textDecorationLine: "underline" },
 });

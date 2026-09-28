@@ -14,7 +14,10 @@ export default function FeedScreen() {
   const { height: winH } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const TAB_BAR = 64; // keep in sync with (tabs)/_layout.tsx
-  const itemH = winH - TAB_BAR - insets.bottom;
+  // Reels must be exactly as tall as the list, or paging drifts by a few px on
+  // Safari (home-screen mode reports a different window height). Measure it.
+  const [listH, setListH] = useState(0);
+  const itemH = listH || winH - TAB_BAR - insets.bottom;
 
   const router = useRouter();
   const { sizes, sizeFilter, setSizeFilter, seen, markSeen, ready: prefsReady } = usePrefs();
@@ -121,7 +124,7 @@ export default function FeedScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.ink }}>
+    <View style={{ flex: 1, backgroundColor: colors.ink }} onLayout={(e) => { const h = Math.round(e.nativeEvent.layout.height); if (h > 0 && h !== listH) setListH(h); }}>
       <FlatList
         ref={listRef}
         data={items}
@@ -132,6 +135,7 @@ export default function FeedScreen() {
         snapToInterval={itemH}
         decelerationRate="fast"
         showsVerticalScrollIndicator={false}
+        key={`reels-${itemH}`}
         getItemLayout={(_, i) => ({ length: itemH, offset: itemH * i, index: i })}
         onViewableItemsChanged={onViewable}
         viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}

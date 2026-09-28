@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "./supabase";
 import { mockBrands, mockPosts, mockProducts } from "./mock";
 import { DELIVERY_FEE } from "./address";
-import type { Address, Brand, CartLine, Category, Order, OrderStatus, Post, Product } from "./types";
+import type { Address, Brand, CartLine, Category, Order, OrderStatus, Post, Product, Review, Rating } from "./types";
 
 // "mock" until the Supabase keys are set, then "supabase".
 export const SOURCE = process.env.EXPO_PUBLIC_DATA_SOURCE ?? "mock";
@@ -412,4 +412,80 @@ async function placeMockOrders(groups: ReturnType<typeof groupByMerchant>, addre
   }));
   await AsyncStorage.setItem(MOCK_ORDERS_KEY, JSON.stringify([...existing, ...created]));
   return created.map((o) => o.id);
+}
+
+// ------------------------------------------------------------------
+// REVIEWS — one per delivered order (08_reviews_analytics_tiers.sql)
+// ------------------------------------------------------------------
+const MOCK_REVIEWS_KEY = "weslet.reviews.mock.v1";
+
+export async function fetchRating(merchantId: string): Promise<Rating> {
+  if (IS_MOCK) {
+    const all = await loadMockReviews();
+    const mine = all.filter((r) => r.merchantId === merchantId);
+    return { count: mine.length, avg: mine.length ? mine.reduce((n, r) => n + r.rating, 0) / mine.length : null };
+  }
+  const { data } = await supabase.from("merchant_ratings").select("review_count, avg_rating").eq("merchant_id", merchantId).maybeSingle();
+  return { count: Number(data?.review_count ?? 0), avg: data?.avg_rating != null ? Number(data.avg_rating) : null };
+}
+
+export async function fetchReviews(merchantId: string): Promise<Review[]> {
+  if (IS_MOCK) return (await loadMockReviews()).filter((r) => r.merchantId === merchantId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const { data, error } = await supabase
+    .from("reviews").select("id, order_id, merchant_id, rating, comment, reply, replied_at, created_at, author:profiles ( full_name )")
+    .eq("merchant_id", merchantId).order("created_at", { ascending: false }).limit(50);
+  if (error || !data) return [];
+  return (data as any[]).map((r) => ({
+    id: String(r.id), orderId: String(r.order_id), merchantId: String(r.merchant_id), rating: Number(r.rating),
+    comment: r.comment ?? null, reply: r.reply ?? null, repliedAt: r.replied_at ?? null, createdAt: r.created_at ?? "",
+    author: firstNameOnly(r.author?.full_name),
+  }));
+}
+
+export async function myReviewForOrder(orderId: string): Promise<Review | null> {
+  if (IS_MOCK) return (await loadMockReviews()).find((r) => r.orderId === orderId) ?? null;
+  const { data } = await supabase.from("reviews").select("id, order_id, merchant_id, rating, comment, reply, replied_at, created_at").eq("order_id", orderId).maybeSingle();
+  if (!data) return null;
+  return { id: String(data.id), orderId: String(data.order_id), merchantId: String(data.merchant_id), rating: Number(data.rating),
+    comment: data.comment ?? null, reply: data.reply ?? null, repliedAt: data.replied_at ?? null, createdAt: data.created_at ?? "", author: "Vous" };
+}
+
+export async function submitReview(order: Order, rating: number, comment: string): Promise<void> {
+  if (IS_MOCK) {
+    const all = (await loadMockReviews()).filter((r) => r.orderId !== order.id);
+    all.push({ id: `mock-${Date.now()}`, orderId: order.id, merchantId: order.merchant.id, rating, comment: comment.trim() || null, reply: null, repliedAt: null, createdAt: new Date().toISOString(), author: "Vous" });
+    await AsyncStorage.setItem(MOCK_REVIEWS_KEY, JSON.stringify(all));
+    return;
+  }
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) throw new Error("Connexion requise");
+  const { error } = await supabase.from("reviews").upsert(
+    { order_id: order.id, merchant_id: order.merchant.id, shopper_id: u.user.id, rating, comment: comment.trim() || null },
+    { onConflict: "order_id" },
+  );
+  if (error) throw new Error(/delivered|policy/i.test(error.message) ? "Vous pourrez noter la boutique une fois la commande livrée." : error.message);
+}
+
+async function loadMockReviews(): Promise<Review[]> {
+  try { const s = await AsyncStorage.getItem(MOCK_REVIEWS_KEY); return s ? JSON.parse(s) : []; } catch { return []; }
+}
+
+const firstNameOnly = (full?: string | null) => {
+  const f = (full ?? "").trim().split(/\s+/)[0];
+  return f ? f : "Client Weslet";
+};
+
+/** Records that the signed-in user accepted the current terms. */
+export async function acceptTerms(version: string): Promise<void> {
+  if (IS_MOCK) return;
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) return;
+  await supabase.from("profiles").update({ terms_accepted_at: new Date().toISOString(), terms_version: version }).eq("id", u.user.id);
+}
+
+export async function deleteMyAccount(): Promise<void> {
+  if (IS_MOCK) return;
+  const { error } = await supabase.rpc("delete_my_account");
+  if (error) throw new Error(error.message);
+  await supabase.auth.signOut();
 }

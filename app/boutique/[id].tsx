@@ -7,11 +7,11 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { ProductCard } from "@/components/ProductCard";
 import { GridSkeleton } from "@/components/Skeleton";
-import { fetchBrand, fetchBrandProducts } from "@/lib/data";
+import { fetchBrand, fetchBrandProducts, fetchRating, fetchReviews } from "@/lib/data";
 import { usePrefs } from "@/lib/prefs";
 import { shareBoutique } from "@/lib/share";
 import { colors, gradient, radius } from "@/lib/theme";
-import type { Brand, Product } from "@/lib/types";
+import type { Brand, Product, Rating, Review } from "@/lib/types";
 
 export default function BoutiqueScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -19,10 +19,15 @@ export default function BoutiqueScreen() {
   const { isFollowing, toggleFollow } = usePrefs();
   const [brand, setBrand] = useState<Brand | null | undefined>(undefined);
   const [items, setItems] = useState<Product[] | null>(null);
+  const [rating, setRating] = useState<Rating>({ count: 0, avg: null });
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [showReviews, setShowReviews] = useState(false);
 
   useEffect(() => {
     fetchBrand(id).then(setBrand).catch(() => setBrand(null));
     fetchBrandProducts(id).then(setItems).catch(() => setItems([]));
+    fetchRating(id).then(setRating).catch(() => {});
+    fetchReviews(id).then(setReviews).catch(() => {});
   }, [id]);
 
   const following = isFollowing(id);
@@ -43,6 +48,26 @@ export default function BoutiqueScreen() {
       <Text style={styles.meta}>
         {brand.city ?? ""}{brand.instagram ? `${brand.city ? "  ·  " : ""}@${brand.instagram}` : ""}
       </Text>
+      <Pressable onPress={() => rating.count > 0 && setShowReviews((v) => !v)} style={styles.ratingRow} hitSlop={6}>
+        <Text style={styles.stars}>{rating.avg != null ? "★".repeat(Math.round(rating.avg)) + "☆".repeat(5 - Math.round(rating.avg)) : "☆☆☆☆☆"}</Text>
+        <Text style={styles.ratingText}>
+          {rating.avg != null ? `${rating.avg.toFixed(1)} · ${rating.count} avis` : "Pas encore d'avis"}{rating.count > 0 ? (showReviews ? " ▴" : " ▾") : ""}
+        </Text>
+      </Pressable>
+      {showReviews && reviews.length > 0 ? (
+        <View style={styles.reviews}>
+          {reviews.slice(0, 10).map((r) => (
+            <View key={r.id} style={styles.review}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                <Text style={styles.reviewAuthor}>{r.author}</Text>
+                <Text style={styles.reviewStars}>{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</Text>
+              </View>
+              {r.comment ? <Text style={styles.reviewText}>{r.comment}</Text> : null}
+              {r.reply ? <Text style={styles.reply}>Réponse de {brand.name} : {r.reply}</Text> : null}
+            </View>
+          ))}
+        </View>
+      ) : null}
       {brand.bio ? <Text style={styles.bio}>{brand.bio}</Text> : null}
       <View style={styles.actions}>
         <Pressable
@@ -102,6 +127,15 @@ const styles = StyleSheet.create({
   letter: { fontSize: 36, fontWeight: "800", color: colors.ink },
   name: { fontSize: 24, fontWeight: "700", letterSpacing: -0.5, color: colors.ink, marginTop: 6 },
   meta: { fontSize: 13, color: colors.muted },
+  ratingRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 },
+  stars: { color: "#FFB020", fontSize: 16, letterSpacing: 1 },
+  ratingText: { fontSize: 13, color: colors.muted, fontWeight: "600" },
+  reviews: { alignSelf: "stretch", marginHorizontal: 16, marginTop: 8, gap: 10 },
+  review: { backgroundColor: colors.mist, borderRadius: radius.md, padding: 12, gap: 4 },
+  reviewAuthor: { fontSize: 13, fontWeight: "700", color: colors.ink },
+  reviewStars: { color: "#FFB020", fontSize: 13 },
+  reviewText: { fontSize: 14, color: "#3D3649", lineHeight: 20 },
+  reply: { fontSize: 13, color: colors.muted, fontStyle: "italic", marginTop: 4 },
   bio: { fontSize: 14, color: colors.ink, textAlign: "center", lineHeight: 20, paddingHorizontal: 24, marginTop: 4 },
   actions: { flexDirection: "row", gap: 8, marginTop: 12 },
   follow: { paddingHorizontal: 22, height: 40, borderRadius: radius.pill, backgroundColor: colors.ink, alignItems: "center", justifyContent: "center" },

@@ -10,6 +10,7 @@ import { shareProduct } from "@/lib/share";
 import { SmartVideo } from "@/components/SmartVideo";
 import { colors, formatPrice, radius } from "@/lib/theme";
 import { unitsLeft } from "@/lib/data";
+import { trackAddToCart, trackPostView, trackShare } from "@/lib/track";
 import type { Post } from "@/lib/types";
 
 type Props = { post: Post; height: number; active: boolean };
@@ -27,6 +28,8 @@ export function ProductReel({ post, height, active }: Props) {
   const lastTap = useRef(0);
   const tapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const heart = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => { if (active) trackPostView(post); }, [active, post]);
 
   const open = () => router.push({ pathname: "/product/[id]", params: { id: product.id } });
   const openBoutique = () => router.push({ pathname: "/boutique/[id]", params: { id: product.brand.id } });
@@ -65,6 +68,7 @@ export function ProductReel({ post, height, active }: Props) {
   const addToBag = () => {
     if (product.variants.length > 0 || product.stock <= 0) return open();
     add(product, null);
+    trackAddToCart(product);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
   };
 
@@ -128,7 +132,7 @@ export function ProductReel({ post, height, active }: Props) {
           />
         ) : null}
         <RailButton label={liked ? "♥" : "♡"} tint={liked ? colors.pink : "#fff"} onPress={like} />
-        <RailButton label="↗" onPress={() => shareProduct(product)} />
+        <RailButton label="↗" onPress={() => { trackShare(product); shareProduct(product); }} />
         <RailButton label="+" onPress={addToBag} />
       </View>
 
@@ -171,7 +175,7 @@ const styles = StyleSheet.create({
   scrim: { position: "absolute", left: 0, right: 0, bottom: 0, height: "55%" },
   burst: { position: "absolute", left: 0, right: 0, top: "38%", alignItems: "center" },
   burstHeart: { color: "#fff", fontSize: 96, textShadowColor: "rgba(0,0,0,0.35)", textShadowRadius: 18 },
-  dots: { position: "absolute", top: 60, left: 0, right: 0, flexDirection: "row", justifyContent: "center", gap: 6 },
+  dots: { position: "absolute", bottom: 10, left: 0, right: 0, flexDirection: "row", justifyContent: "center", gap: 6 },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.45)" },
   dotOn: { backgroundColor: "#fff", width: 18 },
   rail: { position: "absolute", right: 14, bottom: 150, gap: 14, alignItems: "center" },

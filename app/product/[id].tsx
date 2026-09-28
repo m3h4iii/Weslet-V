@@ -9,6 +9,7 @@ import { SmartVideo } from "@/components/SmartVideo";
 import { useCart } from "@/lib/cart";
 import { usePrefs } from "@/lib/prefs";
 import { shareProduct } from "@/lib/share";
+import { trackAddToCart, trackProductView, trackShare } from "@/lib/track";
 import { colors, formatPrice, radius } from "@/lib/theme";
 import type { Post, Product } from "@/lib/types";
 
@@ -27,7 +28,7 @@ export default function ProductScreen() {
   useEffect(() => {
     fetchProduct(id).then((prod) => {
       setP(prod);
-      if (prod) { markViewed(prod.id); fetchProductPosts(prod).then(setPosts).catch(() => {}); }
+      if (prod) { markViewed(prod.id); trackProductView(prod); fetchProductPosts(prod).then(setPosts).catch(() => {}); }
       // Preselect only when there is a single available size; otherwise the buyer must choose.
       const avail = prod ? prod.variants.filter((v) => unitsLeft(prod, v) > 0) : [];
       setVariant(avail.length === 1 ? avail[0] : null);
@@ -53,6 +54,7 @@ export default function ProductScreen() {
   const addToBag = () => {
     if (!canAdd) return;
     add(p, variant);
+    trackAddToCart(p);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.back();
   };
@@ -130,7 +132,7 @@ export default function ProductScreen() {
         <Text style={{ color: colors.ink, fontSize: 18 }}>←</Text>
       </Pressable>
       <View style={[styles.topRight, { top: insets.top + 8 }]}>
-        <Pressable onPress={() => shareProduct(p)} style={styles.round} hitSlop={8}><Text style={{ color: colors.ink, fontSize: 18 }}>↗</Text></Pressable>
+        <Pressable onPress={() => { trackShare(p); shareProduct(p); }} style={styles.round} hitSlop={8}><Text style={{ color: colors.ink, fontSize: 18 }}>↗</Text></Pressable>
         <Pressable onPress={() => { toggleFavorite(p); Haptics.selectionAsync().catch(() => {}); }} style={styles.round} hitSlop={8}>
           <Text style={{ color: isFavorite(p.id) ? colors.pink : colors.ink, fontSize: 18 }}>{isFavorite(p.id) ? "♥" : "♡"}</Text>
         </Pressable>

@@ -32,10 +32,19 @@ export function SmartVideo({ uri, poster, active, muted, width, height }: Props)
     let cancelled = false;
     const el = () => { const v: Set<HTMLVideoElement> | undefined = (player as any)._mountedVideos; return v ? [...v][0] : undefined; };
 
+    const applySound = (v: HTMLVideoElement) => {
+      player.muted = muted;
+      v.muted = muted;
+      // browser refused sound without a gesture → keep it playing, muted
+      if (v.paused) v.play().catch(() => { v.muted = true; player.muted = true; v.play().catch(() => {}); });
+    };
+
     const start = () => {
       if (cancelled) return;
-      player.muted = true;
       const e = el();
+      // Already playing (e.g. the buyer just toggled ♪): apply the sound setting at once.
+      if (e && !e.paused) return applySound(e);
+      player.muted = true;
       if (e) {
         e.muted = true;
         e.play().catch(() => {});
@@ -47,11 +56,7 @@ export function SmartVideo({ uri, poster, active, muted, width, height }: Props)
         setTimeout(() => {
           if (cancelled) return;
           const v = el();
-          player.muted = false;
-          if (v) {
-            v.muted = false;
-            if (v.paused) v.play().catch(() => { v.muted = true; player.muted = true; v.play().catch(() => {}); });
-          }
+          if (v) applySound(v); else player.muted = false;
         }, 350);
       }
     };

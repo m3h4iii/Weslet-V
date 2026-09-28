@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View, ViewToken, useWindowDimensions } from "react-native";
+import { ActivityIndicator, AppState, FlatList, Pressable, RefreshControl, StyleSheet, Text, View, ViewToken, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Wordmark } from "@/components/Logo";
@@ -84,6 +84,17 @@ export default function FeedScreen() {
     if (Date.now() - lastLoad.current > 60_000) load();
   }, [load]));
 
+  // Video (and its sound) must stop the moment the feed is not what the buyer is
+  // looking at: another tab, a product page pushed on top, or the app in background.
+  const [focused, setFocused] = useState(true);
+  useFocusEffect(useCallback(() => { setFocused(true); return () => setFocused(false); }, []));
+  const [appActive, setAppActive] = useState(true);
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (st) => setAppActive(st === "active"));
+    return () => sub.remove();
+  }, []);
+  const playing = focused && appActive;
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await load();
@@ -102,9 +113,9 @@ export default function FeedScreen() {
 
   const renderItem = useCallback(
     ({ item, index }: { item: Post; index: number }) => (
-      <ProductReel post={item} height={itemH} active={index === active} />
+      <ProductReel post={item} height={itemH} active={playing && index === active} />
     ),
-    [itemH, active],
+    [itemH, active, playing],
   );
 
   if (loading) {

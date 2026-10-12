@@ -136,11 +136,11 @@ export default function ProductScreen() {
         </View>
       </ScrollView>
 
-      <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)"))} style={[styles.back, { top: insets.top + 8 }]} hitSlop={8}>
+      <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)"))} style={[styles.back, { top: insets.top + 8 }]} hitSlop={8} accessibilityRole="button" accessibilityLabel="Retour">
         <Text style={{ color: colors.ink, fontSize: 18 }}>←</Text>
       </Pressable>
       <View style={[styles.topRight, { top: insets.top + 8 }]}>
-        <Pressable onPress={() => { trackShare(p); shareProduct(p); }} style={styles.round} hitSlop={8}><Text style={{ color: colors.ink, fontSize: 18 }}>↗</Text></Pressable>
+        <Pressable onPress={() => { trackShare(p); shareProduct(p); }} style={styles.round} hitSlop={8} accessibilityRole="button" accessibilityLabel="Partager"><Text style={{ color: colors.ink, fontSize: 18 }}>↗</Text></Pressable>
         <Pressable onPress={() => { toggleFavorite(p); Haptics.selectionAsync().catch(() => {}); }} style={styles.round} hitSlop={8}>
           <Text style={{ color: isFavorite(p.id) ? colors.pink : colors.ink, fontSize: 18 }}>{isFavorite(p.id) ? "♥" : "♡"}</Text>
         </Pressable>

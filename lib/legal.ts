@@ -1,7 +1,7 @@
 // Legal & help texts shown in the app. Plain French, short paragraphs.
 // Bump TERMS_VERSION when the CGU or privacy policy change: users are asked to accept again.
 
-export const TERMS_VERSION = "2026-09";
+export const TERMS_VERSION = "2026-10";
 export const CONTACT_EMAIL = "hello@weslet.tn";
 
 export type LegalPage = { slug: string; title: string; updated: string; sections: { h: string; p: string[] }[] };
@@ -55,8 +55,18 @@ export const LEGAL_PAGES: LegalPage[] = [
       { h: "Ce que nous ne faisons pas", p: [
         "Nous ne vendons pas vos données. Nous n'envoyons pas de publicité de tiers. Nous ne lisons pas votre carnet d'adresses ni vos photos.",
       ] },
-      { h: "Où sont vos données", p: [
-        "Sur des serveurs sécurisés d'un hébergeur européen, chiffrées en transit. Seule l'équipe Weslet y accède, pour le support et le fonctionnement du service.",
+      { h: "Cookies et stockage local", p: [
+        "Weslet n'utilise aucun cookie publicitaire ni cookie de suivi. L'application enregistre sur votre appareil uniquement ce qui est nécessaire à son fonctionnement : votre session de connexion, vos préférences (tailles, favoris, son, notifications), votre panier et un identifiant anonyme d'appareil. Ces éléments ne sont pas partagés avec des tiers. Aucune bannière de consentement n'est donc nécessaire ; si Weslet ajoute un jour un outil de mesure tiers, votre accord vous sera demandé avant.",
+      ] },
+      { h: "Mesure d'audience", p: [
+        "Nous comptons les vues, les ajouts au panier et les partages par pièce, rattachés à un identifiant anonyme, pour montrer aux Boutiques comment leurs pièces fonctionnent. Ces mesures ne contiennent ni votre nom, ni votre email, ni votre téléphone, et ne sont jamais recoupées avec votre identité. Aucun pixel Meta, Google Analytics ou TikTok n'est installé dans l'application.",
+      ] },
+      { h: "Uniquement les données nécessaires", p: [
+        "Nous ne demandons que ce qui sert à une fonction précise : l'email pour vous connecter, le nom et le téléphone pour que le livreur vous joigne, l'adresse pour livrer. Aucun champ facultatif n'est obligatoire, et vous pouvez modifier ces informations à tout moment depuis Paramètres.",
+      ] },
+      { h: "Où sont vos données, et qui y accède", p: [
+        "Vos données sont hébergées chez Supabase (serveurs situés dans l'Union européenne), chiffrées en transit, avec un accès limité ligne par ligne : vous ne voyez que vos commandes, une Boutique ne voit que les siennes. Seule l'équipe Weslet dispose d'un accès d'administration, pour le support et le fonctionnement du service.",
+        "Nos prestataires techniques, qui n'accèdent aux données que pour fournir leur service : Supabase (base de données et comptes), Netlify (diffusion de l'application web), Resend (envoi des emails de connexion et de suivi), Expo (publication de l'application mobile). Aucun d'eux n'utilise vos données pour son propre compte.",
       ] },
       { h: "Vos droits", p: [
         `Vous pouvez consulter, corriger ou supprimer vos données à tout moment. La suppression du compte est possible depuis Paramètres → Supprimer mon compte : vos informations personnelles sont effacées ; les commandes déjà livrées sont conservées anonymisées pour la comptabilité des Boutiques. Pour toute demande : ${CONTACT_EMAIL}.`,
@@ -94,6 +104,51 @@ export const LEGAL_PAGES: LegalPage[] = [
       { h: "Je suis une boutique, comment je rejoins Weslet ?", p: ["Créez votre compte vendeur sur le site des boutiques, décrivez ce que vous vendez, et l'équipe Weslet vous accompagne : mise en ligne des premières pièces, conseils photo et vidéo, première commande. Programme Starter pour les nouvelles boutiques, Premium pour les marques établies."] },
       { h: "Comment supprimer mon compte ?", p: ["Paramètres → Supprimer mon compte. C'est immédiat et définitif."] },
       { h: "Comment vous contacter ?", p: [`${CONTACT_EMAIL}, ou depuis Paramètres → Nous contacter.`] },
+    ],
+  },
+  {
+    slug: "retours",
+    title: "Retours et remboursements",
+    updated: "Octobre 2026",
+    sections: [
+      { h: "Le principe", p: [
+        "Chaque commande est conclue avec la Boutique qui vend la pièce ; Weslet s'assure que les conditions de retour sont claires, affichées avant l'achat, et respectées. En cas de désaccord, Weslet intervient comme médiateur.",
+      ] },
+      { h: "Vous changez d'avis", p: [
+        "Vous pouvez demander un retour dans les 7 jours suivant la livraison, pour un article non porté, non lavé, avec ses étiquettes. Faites la demande depuis le suivi de votre commande ou auprès de la Boutique ; les frais de retour sont à votre charge sauf indication contraire sur la page de la Boutique. Les pièces personnalisées ou faites sur mesure ne peuvent pas être retournées, sauf défaut.",
+      ] },
+      { h: "La pièce est abîmée, ou ce n'est pas ce que vous avez commandé", p: [
+        "Signalez-le dans les 48 heures après la livraison, avec des photos, depuis le suivi de votre commande. Le retour est alors gratuit et vous êtes remboursé intégralement, frais de livraison compris, ou la pièce est remplacée si vous le préférez.",
+      ] },
+      { h: "Le remboursement", p: [
+        "Il intervient au plus tard 14 jours après réception de la pièce par la Boutique, par le même moyen que le paiement : remise en espèces par le livreur ou virement pour une commande payée à la livraison, recrédit de la carte pour un paiement en ligne. Une commande annulée avant expédition n'entraîne aucun frais.",
+      ] },
+      { h: "Si la Boutique ne répond pas", p: [
+        `Écrivez à ${CONTACT_EMAIL} avec votre numéro de commande. Weslet répond sous 2 jours ouvrés, rappelle la Boutique à ses engagements et peut suspendre une Boutique qui ne les respecte pas.`,
+      ] },
+    ],
+  },
+  {
+    slug: "mentions",
+    title: "Mentions légales",
+    updated: "Octobre 2026",
+    sections: [
+      { h: "Éditeur", p: [
+        "Weslet est un service édité par Mehdi Hmida, porteur du projet, dans le cadre d'une société de droit tunisien en cours de constitution. Ces mentions seront complétées par la dénomination, le numéro d'immatriculation au registre national des entreprises, le matricule fiscal et le siège social dès l'immatriculation.",
+        `Directeur de la publication : Mehdi Hmida. Contact : ${CONTACT_EMAIL}.`,
+      ] },
+      { h: "Hébergement", p: [
+        "Application et sites : Netlify, Inc., 512 2nd Street, San Francisco, CA 94107, États-Unis. Données et comptes : Supabase, Inc., serveurs situés dans l'Union européenne.",
+      ] },
+      { h: "Propriété intellectuelle", p: [
+        "Le nom Weslet, le logo et l'application sont la propriété de l'éditeur. Les photos, vidéos, noms et marques des pièces appartiennent aux Boutiques qui les publient, qui garantissent en disposer des droits. Toute reproduction sans autorisation est interdite.",
+      ] },
+      { h: "Données personnelles", p: [
+        "Le traitement des données personnelles est décrit dans la Politique de confidentialité. Conformément à la loi organique n° 2004-63 relative à la protection des données à caractère personnel, vous disposez d'un droit d'accès, de rectification et de suppression, que vous pouvez exercer depuis Paramètres ou par email.",
+      ] },
+      { h: "Signaler un contenu", p: [
+        `Une pièce contrefaite, une photo utilisée sans droit, un avis abusif : écrivez à ${CONTACT_EMAIL} avec le lien de la page concernée. Weslet retire le contenu signalé sous 48 heures lorsque le signalement est fondé.`,
+      ] },
     ],
   },
 ];

@@ -431,14 +431,19 @@ export async function fetchRating(merchantId: string): Promise<Rating> {
 
 export async function fetchReviews(merchantId: string): Promise<Review[]> {
   if (IS_MOCK) return (await loadMockReviews()).filter((r) => r.merchantId === merchantId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  const { data, error } = await supabase
-    .from("reviews").select("id, order_id, merchant_id, rating, comment, reply, replied_at, created_at, author:profiles ( full_name )")
-    .eq("merchant_id", merchantId).order("created_at", { ascending: false }).limit(50);
-  if (error || !data) return [];
-  return (data as any[]).map((r) => ({
+  const base = "id, order_id, merchant_id, rating, comment, reply, replied_at, created_at";
+  // author_name is stamped on the review by the database (first name only), so the
+  // app never needs to read other customers' profiles. Until that migration runs,
+  // fall back to the old profile join.
+  let res: { data: any[] | null; error: any } = await supabase.from("reviews").select(`${base}, author_name`).eq("merchant_id", merchantId).order("created_at", { ascending: false }).limit(50);
+  if (res.error) {
+    res = await supabase.from("reviews").select(`${base}, author:profiles ( full_name )`).eq("merchant_id", merchantId).order("created_at", { ascending: false }).limit(50);
+  }
+  if (res.error || !res.data) return [];
+  return res.data.map((r) => ({
     id: String(r.id), orderId: String(r.order_id), merchantId: String(r.merchant_id), rating: Number(r.rating),
     comment: r.comment ?? null, reply: r.reply ?? null, repliedAt: r.replied_at ?? null, createdAt: r.created_at ?? "",
-    author: firstNameOnly(r.author?.full_name),
+    author: firstNameOnly(r.author_name ?? r.author?.full_name),
   }));
 }
 

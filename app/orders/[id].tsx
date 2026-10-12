@@ -145,7 +145,7 @@ export default function OrderScreen() {
             </Text>
           </Pressable>
         ) : null}
-        <Pressable onPress={() => router.replace("/(tabs)")} style={styles.secondary}>
+        <Pressable onPress={() => router.replace("/")} style={styles.secondary}>
           <Text style={styles.secondaryText}>Continuer mes achats</Text>
         </Pressable>
       </ScrollView>
@@ -156,7 +156,7 @@ export default function OrderScreen() {
 function Header({ onBack, title }: { onBack: () => void; title: string }) {
   return (
     <View style={styles.header}>
-      <Pressable onPress={onBack} hitSlop={10} style={styles.back}><Text style={{ fontSize: 18, color: colors.ink }}>←</Text></Pressable>
+      <Pressable onPress={onBack} hitSlop={10} style={styles.back} accessibilityRole="button" accessibilityLabel="Retour"><Text style={{ fontSize: 18, color: colors.ink }}>←</Text></Pressable>
       <Text style={styles.title}>{title}</Text>
       <View style={{ width: 40 }} />
     </View>

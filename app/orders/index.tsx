@@ -21,7 +21,7 @@ export default function OrdersScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={["top"]}>
       <View style={styles.header}>
-        <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/profile"))} hitSlop={10} style={styles.back}>
+        <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/profile"))} hitSlop={10} style={styles.back} accessibilityRole="button" accessibilityLabel="Retour">
           <Text style={{ fontSize: 18, color: colors.ink }}>←</Text>
         </Pressable>
         <Text style={styles.title}>Mes commandes</Text>

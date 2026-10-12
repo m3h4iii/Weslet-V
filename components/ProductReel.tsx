@@ -13,11 +13,11 @@ import { unitsLeft } from "@/lib/data";
 import { trackAddToCart, trackPostView, trackShare } from "@/lib/track";
 import type { Post } from "@/lib/types";
 
-type Props = { post: Post; height: number; active: boolean };
+type Props = { post: Post; height: number; active: boolean; near?: boolean };
 
 const DOUBLE_TAP_MS = 280;
 
-export function ProductReel({ post, height, active }: Props) {
+export function ProductReel({ post, height, active, near = true }: Props) {
   const product = post.product;
   const router = useRouter();
   const { width } = useWindowDimensions();
@@ -90,7 +90,12 @@ export function ProductReel({ post, height, active }: Props) {
   return (
     <View style={{ height, backgroundColor: colors.ink }}>
       {post.kind === "video" ? (
-        <SmartVideo uri={post.url} poster={post.poster ?? product.images[0]} active={active} muted={!sound} width={width} height={height} />
+        near ? (
+          <SmartVideo uri={post.url} poster={post.poster ?? product.images[0]} active={active} muted={!sound} width={width} height={height} />
+        ) : (
+          // far from the screen: just the poster, no media player allocated
+          <Image source={{ uri: post.poster ?? product.images[0] }} style={StyleSheet.absoluteFill} contentFit="cover" />
+        )
       ) : photos.length > 1 ? (
         <FlatList
           data={photos}
@@ -135,12 +140,13 @@ export function ProductReel({ post, height, active }: Props) {
             label="♪"
             tint="#fff"
             strike={!sound}
+            a11y={sound ? "Couper le son" : "Activer le son"}
             onPress={() => { setSound(!sound); Haptics.selectionAsync().catch(() => {}); }}
           />
         ) : null}
-        <RailButton label={liked ? "♥" : "♡"} tint={liked ? colors.pink : "#fff"} onPress={like} />
-        <RailButton label="↗" onPress={() => { trackShare(product); shareProduct(product); }} />
-        <RailButton label="+" onPress={addToBag} />
+        <RailButton label={liked ? "♥" : "♡"} tint={liked ? colors.pink : "#fff"} onPress={like} a11y={liked ? "Retirer des favoris" : "Ajouter aux favoris"} />
+        <RailButton label="↗" onPress={() => { trackShare(product); shareProduct(product); }} a11y="Partager" />
+        <RailButton label="+" onPress={addToBag} a11y="Ajouter au panier" />
       </View>
 
       <View style={styles.info}>
@@ -169,9 +175,9 @@ export function ProductReel({ post, height, active }: Props) {
   );
 }
 
-function RailButton({ label, onPress, tint = "#fff", strike = false }: { label: string; onPress: () => void; tint?: string; strike?: boolean }) {
+function RailButton({ label, onPress, tint = "#fff", strike = false, a11y }: { label: string; onPress: () => void; tint?: string; strike?: boolean; a11y: string }) {
   return (
-    <Pressable onPress={onPress} style={styles.railBtn} hitSlop={8}>
+    <Pressable onPress={onPress} style={styles.railBtn} hitSlop={8} accessibilityRole="button" accessibilityLabel={a11y}>
       <Text style={[styles.railText, { color: tint }]}>{label}</Text>
       {strike ? <View style={styles.strike} pointerEvents="none" /> : null}
     </Pressable>

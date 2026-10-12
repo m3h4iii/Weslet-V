@@ -5,10 +5,12 @@ import { CartProvider } from "@/lib/cart";
 import { AuthProvider } from "@/lib/auth";
 import { PrefsProvider } from "@/lib/prefs";
 import { TermsGate } from "@/components/TermsGate";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
+      <ErrorBoundary>
       <AuthProvider>
         <PrefsProvider>
         <CartProvider>
@@ -31,6 +33,7 @@ export default function RootLayout() {
         </CartProvider>
         </PrefsProvider>
       </AuthProvider>
+      </ErrorBoundary>
     </SafeAreaProvider>
   );
 }

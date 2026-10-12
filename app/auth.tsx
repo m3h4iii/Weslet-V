@@ -86,7 +86,7 @@ export default function AuthScreen() {
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           <View style={styles.top}>
             <Wordmark />
-            <Pressable onPress={() => router.back()} hitSlop={10}><Text style={styles.close}>✕</Text></Pressable>
+            <Pressable onPress={() => router.back()} hitSlop={10} accessibilityRole="button" accessibilityLabel="Fermer"><Text style={styles.close}>✕</Text></Pressable>
           </View>
 
           {step === "email" && (

@@ -22,7 +22,7 @@ export default function SizesScreen() {
       <ScrollView contentContainerStyle={{ padding: 20, gap: 22, paddingBottom: 120 }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
           <Text style={styles.h1}>Mes tailles</Text>
-          <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)"))} hitSlop={10}><Text style={styles.close}>✕</Text></Pressable>
+          <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)"))} hitSlop={10} accessibilityRole="button" accessibilityLabel="Fermer"><Text style={styles.close}>✕</Text></Pressable>
         </View>
         <Text style={styles.p}>Choisissez toutes les tailles qui vous vont. Le fil ne montrera que les pièces disponibles dans vos tailles ; les accessoires taille unique restent visibles.</Text>
 

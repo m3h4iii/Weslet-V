@@ -42,7 +42,7 @@ export default function ReviewScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={["top"]}>
       <View style={styles.bar}>
-        <Pressable onPress={goBack} hitSlop={10} style={styles.back}><Text style={{ fontSize: 18, color: colors.ink }}>←</Text></Pressable>
+        <Pressable onPress={goBack} hitSlop={10} style={styles.back} accessibilityRole="button" accessibilityLabel="Retour"><Text style={{ fontSize: 18, color: colors.ink }}>←</Text></Pressable>
         <Text style={styles.title}>Votre avis</Text>
         <View style={{ width: 40 }} />
       </View>

@@ -51,7 +51,7 @@ export default function BagScreen() {
                   <View style={styles.qty}>
                     <Pressable onPress={() => setQty(item.product.id, item.variant, item.qty - 1)} style={styles.qtyBtn}><Text style={styles.qtyText}>−</Text></Pressable>
                     <Text style={styles.qtyNum}>{item.qty}</Text>
-                    <Pressable onPress={() => setQty(item.product.id, item.variant, item.qty + 1)} style={styles.qtyBtn}><Text style={styles.qtyText}>+</Text></Pressable>
+                    <Pressable onPress={() => setQty(item.product.id, item.variant, item.qty + 1)} style={styles.qtyBtn} accessibilityRole="button" accessibilityLabel="Ajouter un"><Text style={styles.qtyText}>+</Text></Pressable>
                   </View>
                 </View>
               ))}

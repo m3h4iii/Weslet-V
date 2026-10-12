@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, AppState, FlatList, Pressable, RefreshControl, StyleSheet, Text, View, ViewToken, useWindowDimensions } from "react-native";
+import { ActivityIndicator, AppState, FlatList, Platform, Pressable, RefreshControl, StyleSheet, Text, View, ViewToken, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Wordmark } from "@/components/Logo";
@@ -18,6 +18,7 @@ export default function FeedScreen() {
   // Safari (home-screen mode reports a different window height). Measure it.
   const [listH, setListH] = useState(0);
   const itemH = listH || winH - TAB_BAR - insets.bottom;
+  const layoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const router = useRouter();
   const { sizes, sizeFilter, setSizeFilter, seen, markSeen, ready: prefsReady } = usePrefs();
@@ -71,6 +72,7 @@ export default function FeedScreen() {
   const onSizeChip = () => {
     if (sizes.length === 0) return router.push("/sizes");
     setSizeFilter(!sizeFilter);
+    setActive(0);
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
   };
 
@@ -99,6 +101,7 @@ export default function FeedScreen() {
     setRefreshing(true);
     await load();
     setRefreshing(false);
+    setActive(0);
     listRef.current?.scrollToOffset({ offset: 0, animated: true });
   }, [load]);
 
@@ -111,9 +114,23 @@ export default function FeedScreen() {
     }
   }).current;
 
+  // Safari shows/hides its toolbar while scrolling, which changes the list height.
+  // Re-align the current reel to the new height instead of remounting the list.
+  useEffect(() => {
+    if (!listRef.current || items.length === 0) return;
+    const t = setTimeout(() => listRef.current?.scrollToOffset({ offset: itemH * active, animated: false }), 30);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemH]);
+
   const renderItem = useCallback(
     ({ item, index }: { item: Post; index: number }) => (
-      <ProductReel post={item} height={itemH} active={playing && index === active} />
+      <ProductReel
+        post={item}
+        height={itemH}
+        active={playing && index === active}
+        near={Math.abs(index - active) <= 1}
+      />
     ),
     [itemH, active, playing],
   );
@@ -135,7 +152,16 @@ export default function FeedScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.ink }} onLayout={(e) => { const h = Math.round(e.nativeEvent.layout.height); if (h > 0 && h !== listH) setListH(h); }}>
+    <View
+      style={{ flex: 1, backgroundColor: colors.ink }}
+      onLayout={(e) => {
+        const h = Math.round(e.nativeEvent.layout.height);
+        if (h <= 0 || h === listH) return;
+        if (layoutTimer.current) clearTimeout(layoutTimer.current);
+        // wait for the resize to settle (toolbar animation) before re-laying out the reels
+        layoutTimer.current = setTimeout(() => setListH(h), listH === 0 ? 0 : 150);
+      }}
+    >
       <FlatList
         ref={listRef}
         data={items}
@@ -146,12 +172,15 @@ export default function FeedScreen() {
         snapToInterval={itemH}
         decelerationRate="fast"
         showsVerticalScrollIndicator={false}
-        key={`reels-${itemH}`}
         getItemLayout={(_, i) => ({ length: itemH, offset: itemH * i, index: i })}
         onViewableItemsChanged={onViewable}
         viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
+        // keep few reels mounted: each video reel is a real media player, and phones
+        // (Safari especially) choke past a handful of them
+        initialNumToRender={2}
+        maxToRenderPerBatch={2}
         windowSize={3}
-        removeClippedSubviews
+        removeClippedSubviews={Platform.OS !== "web"}
         ListEmptyComponent={
           <View style={[styles.center, { height: itemH, padding: 30, gap: 14 }]}>
             <Text style={styles.emptyText}>{filterOn ? "Rien dans vos tailles pour l'instant." : "Aucune pièce en ligne."}</Text>
@@ -165,7 +194,7 @@ export default function FeedScreen() {
         <Wordmark light />
       </View>
       {active > 0 && unseenCount === 0 && items.length > 3 ? (
-        <Pressable onPress={() => listRef.current?.scrollToOffset({ offset: 0, animated: true })} style={[styles.toTop, { top: insets.top + 50 }]}>
+        <Pressable onPress={() => { setActive(0); listRef.current?.scrollToOffset({ offset: 0, animated: true }); }} style={[styles.toTop, { top: insets.top + 50 }]}>
           <Text style={styles.toTopText}>Tout vu · revenir au début ↑</Text>
         </Pressable>
       ) : null}
@@ -175,7 +204,7 @@ export default function FeedScreen() {
             {sizes.length === 0 ? "Ma taille" : filterOn ? `Ma taille ✓` : "Ma taille"}
           </Text>
         </Pressable>
-        <Pressable onPress={onRefresh} disabled={refreshing} hitSlop={10} style={styles.refresh}>
+        <Pressable onPress={onRefresh} disabled={refreshing} hitSlop={10} style={styles.refresh} accessibilityRole="button" accessibilityLabel="Actualiser le fil">
           {refreshing ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.refreshText}>↻</Text>}
         </Pressable>
       </View>

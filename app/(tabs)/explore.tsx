@@ -52,7 +52,7 @@ export default function ExploreScreen() {
           autoCorrect={false}
         />
       </View>
-      <Pressable onPress={onRefresh} disabled={refreshing} hitSlop={8} style={styles.refresh}>
+      <Pressable onPress={onRefresh} disabled={refreshing} hitSlop={8} style={styles.refresh} accessibilityRole="button" accessibilityLabel="Actualiser">
         <Text style={[styles.refreshText, refreshing && { opacity: 0.4 }]}>↻</Text>
       </Pressable>
       </View>

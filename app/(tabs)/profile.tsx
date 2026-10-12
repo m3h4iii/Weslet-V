@@ -70,7 +70,7 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingRight: 12 }}>
           <Text style={styles.title}>Profil</Text>
-          <Pressable onPress={() => router.push("/settings")} hitSlop={10} style={styles.gear}><Text style={{ fontSize: 22, color: colors.ink }}>⚙</Text></Pressable>
+          <Pressable onPress={() => router.push("/settings")} hitSlop={10} style={styles.gear} accessibilityRole="button" accessibilityLabel="Paramètres"><Text style={{ fontSize: 22, color: colors.ink }}>⚙</Text></Pressable>
         </View>
 
         <Pressable onPress={() => router.push("/favorites")} style={styles.rowBtn}>

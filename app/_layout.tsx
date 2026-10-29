@@ -28,6 +28,8 @@ export default function RootLayout() {
             <Stack.Screen name="settings" />
             <Stack.Screen name="legal/[slug]" />
             <Stack.Screen name="review/[orderId]" options={{ presentation: "modal" }} />
+            <Stack.Screen name="outlet/index" />
+            <Stack.Screen name="outlet/[id]" options={{ presentation: "card" }} />
           </Stack>
           <TermsGate />
         </CartProvider>

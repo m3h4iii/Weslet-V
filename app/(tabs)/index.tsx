@@ -3,6 +3,7 @@ import { ActivityIndicator, AppState, FlatList, Platform, Pressable, RefreshCont
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Wordmark } from "@/components/Logo";
+import { WorldSwitch } from "@/components/WorldSwitch";
 import { ProductReel } from "@/components/ProductReel";
 import { fetchFeed, fitsSizes, subscribeCatalog } from "@/lib/data";
 import { usePrefs } from "@/lib/prefs";
@@ -193,8 +194,11 @@ export default function FeedScreen() {
       <View style={[styles.header, { top: insets.top + 8 }]} pointerEvents="none">
         <Wordmark light />
       </View>
+      <View style={[styles.header, { top: insets.top + 46 }]}>
+        <WorldSwitch active="boutiques" onDark />
+      </View>
       {active > 0 && unseenCount === 0 && items.length > 3 ? (
-        <Pressable onPress={() => { setActive(0); listRef.current?.scrollToOffset({ offset: 0, animated: true }); }} style={[styles.toTop, { top: insets.top + 50 }]}>
+        <Pressable onPress={() => { setActive(0); listRef.current?.scrollToOffset({ offset: 0, animated: true }); }} style={[styles.toTop, { top: insets.top + 92 }]}>
           <Text style={styles.toTopText}>Tout vu · revenir au début ↑</Text>
         </Pressable>
       ) : null}

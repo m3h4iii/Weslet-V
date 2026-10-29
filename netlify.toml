@@ -2,6 +2,13 @@
   command = "npx expo export -p web"
   publish = "dist"
 
+# The app is one page: any address (/outlet, /product/…) must load index.html,
+# otherwise refreshing a screen shows Netlify's "Page not found".
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
 # Security headers for every page of the app
 [[headers]]
   for = "/*"

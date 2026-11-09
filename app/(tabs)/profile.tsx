@@ -13,11 +13,14 @@ import { IS_MOCK } from "@/lib/data";
 import { emptyAddress, loadAddress, normalizePhone, saveAddress, validateAddress } from "@/lib/address";
 import { colors, radius } from "@/lib/theme";
 import type { Address } from "@/lib/types";
+import { BRAND } from "@/lib/brand";
+import { useCompare } from "@/lib/compare";
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { ready, signedIn, profile, updateProfile, signOut } = useAuth();
   const { favorites, sizes, follows } = usePrefs();
+  const { ids: compareIds } = useCompare();
   const [followed, setFollowed] = useState<Brand[]>([]);
   useEffect(() => {
     if (follows.length === 0) return setFollowed([]);
@@ -77,6 +80,10 @@ export default function ProfileScreen() {
           <Text style={styles.rowBtnText}>Favoris</Text>
           <Text style={styles.rowMeta}>{favorites.length > 0 ? `${favorites.length}  ›` : "›"}</Text>
         </Pressable>
+        <Pressable onPress={() => router.push("/compare")} style={styles.rowBtn}>
+          <Text style={styles.rowBtnText}>Comparer</Text>
+          <Text style={styles.rowMeta}>{compareIds.length > 0 ? `${compareIds.length}  ›` : "›"}</Text>
+        </Pressable>
         <Pressable onPress={() => router.push("/sizes")} style={styles.rowBtn}>
           <Text style={styles.rowBtnText}>Mes tailles</Text>
           <Text style={styles.rowMeta} numberOfLines={1}>{sizes.length > 0 ? `${sizes.join(" · ")}  ›` : "À définir  ›"}</Text>
@@ -95,7 +102,7 @@ export default function ProfileScreen() {
 
         {!ready ? null : !signedIn ? (
           <View style={styles.box}>
-            <Text style={styles.h2}>Bienvenue sur Weslet</Text>
+            <Text style={styles.h2}>Bienvenue sur {BRAND.name}</Text>
             <Text style={styles.p}>Connectez-vous pour commander et suivre vos livraisons. Un code par email, pas de mot de passe.</Text>
             <Pressable onPress={() => router.push("/auth")} style={fieldStyles.primary}>
               <Text style={fieldStyles.primaryText}>Se connecter</Text>

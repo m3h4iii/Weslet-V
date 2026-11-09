@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import { usePrefs } from "@/lib/prefs";
 import { TERMS_VERSION } from "@/lib/legal";
 import { colors, radius } from "@/lib/theme";
+import { BRAND } from "@/lib/brand";
 
 /**
  * One-time acceptance banner (web and first app open). Signed-in users also
@@ -16,7 +17,7 @@ export function TermsGate() {
   return (
     <View style={styles.wrap} pointerEvents="box-none">
       <View style={styles.sheet}>
-        <Text style={styles.title}>Bienvenue sur Weslet</Text>
+        <Text style={styles.title}>Bienvenue sur {BRAND.name}</Text>
         <Text style={styles.text}>
           En continuant, vous acceptez les{" "}
           <Text style={styles.link} onPress={() => router.push({ pathname: "/legal/[slug]", params: { slug: "cgu" } })}>conditions d'utilisation</Text>

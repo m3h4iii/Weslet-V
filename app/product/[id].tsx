@@ -6,6 +6,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { fetchProduct, fetchProductPosts, unitsLeft } from "@/lib/data";
 import { SmartVideo } from "@/components/SmartVideo";
+import { ProductStats } from "@/components/ProductStats";
+import { useCompare, MAX_COMPARE } from "@/lib/compare";
 import { useCart } from "@/lib/cart";
 import { usePrefs } from "@/lib/prefs";
 import { shareProduct } from "@/lib/share";
@@ -20,6 +22,8 @@ export default function ProductScreen() {
   const { width } = useWindowDimensions();
   const { add } = useCart();
   const { isFavorite, toggleFavorite, markViewed } = usePrefs();
+  const compare = useCompare();
+  const [compareMsg, setCompareMsg] = useState<string | null>(null);
   const [p, setP] = useState<Product | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [slide, setSlide] = useState(0);
@@ -55,6 +59,15 @@ export default function ProductScreen() {
   const onSwipe = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const i = Math.max(0, Math.min(slides.length - 1, Math.round(e.nativeEvent.contentOffset.x / width)));
     setSlide((cur) => (cur === i ? cur : i));
+  };
+
+  const inCompare = compare.has(p.id);
+  const onCompare = () => {
+    const r = compare.toggle(p.id);
+    Haptics.selectionAsync().catch(() => {});
+    if (r === "full") setCompareMsg(`Maximum ${MAX_COMPARE} pièces. Retirez-en une pour ajouter celle-ci.`);
+    else if (r === "removed") setCompareMsg(null);
+    else setCompareMsg(compare.ids.length + 1 >= 2 ? "Ajoutée. Prête à comparer !" : "Ajoutée. Choisissez une autre pièce à comparer.");
   };
 
   const addToBag = () => {
@@ -104,6 +117,19 @@ export default function ProductScreen() {
           </Pressable>
           <Text style={styles.name}>{p.name}</Text>
           <Text style={styles.price}>{formatPrice(p.price)}</Text>
+          <ProductStats productId={p.id} />
+
+          <View style={styles.compareRow}>
+            <Pressable onPress={onCompare} style={[styles.comparePill, inCompare && styles.comparePillOn]} accessibilityRole="button">
+              <Text style={[styles.compareText, inCompare && { color: "#fff" }]}>{inCompare ? "✓ Dans la comparaison" : "⇄ Comparer"}</Text>
+            </Pressable>
+            {compare.ids.length >= 2 ? (
+              <Pressable onPress={() => router.push("/compare")} hitSlop={6}>
+                <Text style={styles.compareLink}>Voir la comparaison ({compare.ids.length}) ›</Text>
+              </Pressable>
+            ) : null}
+          </View>
+          {compareMsg ? <Text style={styles.compareMsg}>{compareMsg}</Text> : null}
 
           {hasSizes && (
             <View style={{ marginTop: 14 }}>
@@ -176,6 +202,12 @@ const styles = StyleSheet.create({
   variantOut: { backgroundColor: colors.mist, borderColor: colors.mist },
   variantText: { color: colors.ink, fontSize: 14, fontWeight: "600" },
   variantTextOut: { color: colors.muted, textDecorationLine: "line-through" },
+  compareRow: { flexDirection: "row", alignItems: "center", gap: 12, marginTop: 12, flexWrap: "wrap" },
+  comparePill: { borderWidth: 1, borderColor: colors.ink, borderRadius: radius.pill, paddingHorizontal: 14, paddingVertical: 8 },
+  comparePillOn: { backgroundColor: colors.ink },
+  compareText: { color: colors.ink, fontWeight: "700", fontSize: 13 },
+  compareLink: { color: colors.violet, fontWeight: "700", fontSize: 13 },
+  compareMsg: { color: colors.muted, fontSize: 12, marginTop: 6 },
   desc: { color: colors.muted, fontSize: 15, lineHeight: 22, marginTop: 14 },
   back: { position: "absolute", left: 14, width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.9)", alignItems: "center", justifyContent: "center" },
   topRight: { position: "absolute", right: 14, flexDirection: "row", gap: 8 },

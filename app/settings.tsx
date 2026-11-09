@@ -8,6 +8,7 @@ import { usePrefs } from "@/lib/prefs";
 import { deleteMyAccount, IS_MOCK } from "@/lib/data";
 import { CONTACT_EMAIL, LEGAL_PAGES } from "@/lib/legal";
 import { colors, radius } from "@/lib/theme";
+import { BRAND } from "@/lib/brand";
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -70,8 +71,8 @@ export default function SettingsScreen() {
           {LEGAL_PAGES.map((p) => (
             <Row key={p.slug} label={p.title} onPress={() => router.push({ pathname: "/legal/[slug]", params: { slug: p.slug } })} />
           ))}
-          <Row label="Nous contacter" value={CONTACT_EMAIL} onPress={() => Linking.openURL(`mailto:${CONTACT_EMAIL}?subject=Weslet`)} />
-          <Row label="Vous êtes une boutique ?" value="Vendre sur Weslet" onPress={() => router.push({ pathname: "/legal/[slug]", params: { slug: "faq" } })} />
+          <Row label="Nous contacter" value={CONTACT_EMAIL} onPress={() => Linking.openURL(`mailto:${CONTACT_EMAIL}?subject=${BRAND.name}`)} />
+          <Row label="Vous êtes une boutique ?" value={`Vendre sur ${BRAND.name}`} onPress={() => router.push({ pathname: "/legal/[slug]", params: { slug: "faq" } })} />
         </Section>
 
         {signedIn && !IS_MOCK ? (
@@ -81,7 +82,7 @@ export default function SettingsScreen() {
           </Section>
         ) : null}
 
-        <Text style={styles.version}>Weslet {version}{IS_MOCK ? " · mode démo" : ""}</Text>
+        <Text style={styles.version}>{BRAND.name} {version}{IS_MOCK ? " · mode démo" : ""}</Text>
       </ScrollView>
     </SafeAreaView>
   );

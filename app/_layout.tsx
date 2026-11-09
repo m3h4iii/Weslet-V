@@ -4,6 +4,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { CartProvider } from "@/lib/cart";
 import { AuthProvider } from "@/lib/auth";
 import { PrefsProvider } from "@/lib/prefs";
+import { CompareProvider } from "@/lib/compare";
 import { TermsGate } from "@/components/TermsGate";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -14,6 +15,7 @@ export default function RootLayout() {
       <AuthProvider>
         <PrefsProvider>
         <CartProvider>
+        <CompareProvider>
           <StatusBar style="auto" />
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" />
@@ -30,8 +32,10 @@ export default function RootLayout() {
             <Stack.Screen name="review/[orderId]" options={{ presentation: "modal" }} />
             <Stack.Screen name="outlet/index" />
             <Stack.Screen name="outlet/[id]" options={{ presentation: "card" }} />
+            <Stack.Screen name="compare" />
           </Stack>
           <TermsGate />
+        </CompareProvider>
         </CartProvider>
         </PrefsProvider>
       </AuthProvider>

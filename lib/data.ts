@@ -3,6 +3,7 @@ import { supabase } from "./supabase";
 import { mockBrands, mockPosts, mockProducts } from "./mock";
 import { DELIVERY_FEE } from "./address";
 import type { Address, Brand, CartLine, Category, Order, OrderStatus, Post, Product, Review, Rating } from "./types";
+import { BRAND } from "./brand";
 
 // "mock" until the Supabase keys are set, then "supabase".
 export const SOURCE = process.env.EXPO_PUBLIC_DATA_SOURCE ?? "mock";
@@ -477,7 +478,7 @@ async function loadMockReviews(): Promise<Review[]> {
 
 const firstNameOnly = (full?: string | null) => {
   const f = (full ?? "").trim().split(/\s+/)[0];
-  return f ? f : "Client Weslet";
+  return f ? f : `Client ${BRAND.name}`;
 };
 
 /** Records that the signed-in user accepted the current terms. */

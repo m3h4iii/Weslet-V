@@ -1,6 +1,7 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Product } from "./types";
+import { trackFavorite } from "./track";
 
 // Everything a buyer tells us about themselves without an account:
 // favourites, followed boutiques, their sizes, recently viewed pieces.
@@ -63,11 +64,15 @@ export function PrefsProvider({ children }: { children: React.ReactNode }) {
     if (ready) AsyncStorage.setItem(KEY, JSON.stringify(state)).catch(() => {});
   }, [state, ready]);
 
+  // Latest state for callbacks that must know the current value synchronously.
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
   const toggleFavorite = useCallback((p: Product) => {
-    let now = false;
+    const now = !stateRef.current.favorites.some((f) => f.id === p.id);
+    if (p.brand.id) trackFavorite(p, now);
     setState((st) => {
       const has = st.favorites.some((f) => f.id === p.id);
-      now = !has;
       return {
         ...st,
         favorites: has

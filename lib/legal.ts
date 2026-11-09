@@ -1,8 +1,9 @@
+import { BRAND } from "./brand";
 // Legal & help texts shown in the app. Plain French, short paragraphs.
 // Bump TERMS_VERSION when the CGU or privacy policy change: users are asked to accept again.
 
 export const TERMS_VERSION = "2026-10";
-export const CONTACT_EMAIL = "hello@weslet.tn";
+export const CONTACT_EMAIL = BRAND.email;
 
 export type LegalPage = { slug: string; title: string; updated: string; sections: { h: string; p: string[] }[] };
 
@@ -12,8 +13,8 @@ export const LEGAL_PAGES: LegalPage[] = [
     title: "Conditions d'utilisation",
     updated: "Septembre 2026",
     sections: [
-      { h: "1. Ce qu'est Weslet", p: [
-        "Weslet est une place de marché mobile qui met en relation des boutiques et créateurs tunisiens (« les Boutiques ») avec des acheteurs (« vous »). Weslet ne vend pas les articles : chaque commande est un contrat entre vous et la Boutique. Weslet organise la mise en relation, le paiement et le suivi de la livraison.",
+      { h: `1. Ce qu'est ${BRAND.name}`, p: [
+        `${BRAND.name} est une place de marché mobile qui met en relation des boutiques et créateurs tunisiens (« les Boutiques ») avec des acheteurs (« vous »). ${BRAND.name} ne vend pas les articles : chaque commande est un contrat entre vous et la Boutique. ${BRAND.name} organise la mise en relation, le paiement et le suivi de la livraison.`,
         "En créant un compte ou en passant une commande, vous acceptez les présentes conditions et la politique de confidentialité.",
       ] },
       { h: "2. Votre compte", p: [
@@ -30,13 +31,13 @@ export const LEGAL_PAGES: LegalPage[] = [
         "Vous pouvez refuser un colis à la livraison s'il est endommagé ou ne correspond pas à la commande. Après réception, une demande de retour ou d'échange (taille, défaut) doit être faite sous 7 jours depuis la page de la commande ; la Boutique y répond sous 48 heures. Les articles portés, lavés ou sans étiquette ne sont pas repris, sauf défaut.",
       ] },
       { h: "6. Avis", p: [
-        "Après une commande livrée, vous pouvez noter la Boutique. Les avis doivent être sincères et respectueux. Weslet retire les avis injurieux, hors sujet ou manifestement faux.",
+        `Après une commande livrée, vous pouvez noter la Boutique. Les avis doivent être sincères et respectueux. ${BRAND.name} retire les avis injurieux, hors sujet ou manifestement faux.`,
       ] },
       { h: "7. Responsabilité", p: [
-        "Les Boutiques sont responsables de la description, de la qualité et de la conformité de leurs articles. Weslet fait son possible pour que la plateforme fonctionne sans interruption mais ne garantit pas une disponibilité permanente.",
+        `Les Boutiques sont responsables de la description, de la qualité et de la conformité de leurs articles. ${BRAND.name} fait son possible pour que la plateforme fonctionne sans interruption mais ne garantit pas une disponibilité permanente.`,
       ] },
       { h: "8. Modifications et contact", p: [
-        `Weslet peut modifier ces conditions ; vous en serez informé dans l'application. Questions : ${CONTACT_EMAIL}.`,
+        `${BRAND.name} peut modifier ces conditions ; vous en serez informé dans l'application. Questions : ${CONTACT_EMAIL}.`,
       ] },
     ],
   },
@@ -56,7 +57,7 @@ export const LEGAL_PAGES: LegalPage[] = [
         "Nous ne vendons pas vos données. Nous n'envoyons pas de publicité de tiers. Nous ne lisons pas votre carnet d'adresses ni vos photos.",
       ] },
       { h: "Cookies et stockage local", p: [
-        "Weslet n'utilise aucun cookie publicitaire ni cookie de suivi. L'application enregistre sur votre appareil uniquement ce qui est nécessaire à son fonctionnement : votre session de connexion, vos préférences (tailles, favoris, son, notifications), votre panier et un identifiant anonyme d'appareil. Ces éléments ne sont pas partagés avec des tiers. Aucune bannière de consentement n'est donc nécessaire ; si Weslet ajoute un jour un outil de mesure tiers, votre accord vous sera demandé avant.",
+        `${BRAND.name} n'utilise aucun cookie publicitaire ni cookie de suivi. L'application enregistre sur votre appareil uniquement ce qui est nécessaire à son fonctionnement : votre session de connexion, vos préférences (tailles, favoris, son, notifications), votre panier et un identifiant anonyme d'appareil. Ces éléments ne sont pas partagés avec des tiers. Aucune bannière de consentement n'est donc nécessaire ; si ${BRAND.name} ajoute un jour un outil de mesure tiers, votre accord vous sera demandé avant.`,
       ] },
       { h: "Mesure d'audience", p: [
         "Nous comptons les vues, les ajouts au panier et les partages par pièce, rattachés à un identifiant anonyme, pour montrer aux Boutiques comment leurs pièces fonctionnent. Ces mesures ne contiennent ni votre nom, ni votre email, ni votre téléphone, et ne sont jamais recoupées avec votre identité. Aucun pixel Meta, Google Analytics ou TikTok n'est installé dans l'application.",
@@ -65,7 +66,7 @@ export const LEGAL_PAGES: LegalPage[] = [
         "Nous ne demandons que ce qui sert à une fonction précise : l'email pour vous connecter, le nom et le téléphone pour que le livreur vous joigne, l'adresse pour livrer. Aucun champ facultatif n'est obligatoire, et vous pouvez modifier ces informations à tout moment depuis Paramètres.",
       ] },
       { h: "Où sont vos données, et qui y accède", p: [
-        "Vos données sont hébergées chez Supabase (serveurs situés dans l'Union européenne), chiffrées en transit, avec un accès limité ligne par ligne : vous ne voyez que vos commandes, une Boutique ne voit que les siennes. Seule l'équipe Weslet dispose d'un accès d'administration, pour le support et le fonctionnement du service.",
+        `Vos données sont hébergées chez Supabase (serveurs situés dans l'Union européenne), chiffrées en transit, avec un accès limité ligne par ligne : vous ne voyez que vos commandes, une Boutique ne voit que les siennes. Seule l'équipe ${BRAND.name} dispose d'un accès d'administration, pour le support et le fonctionnement du service.`,
         "Nos prestataires techniques, qui n'accèdent aux données que pour fournir leur service : Supabase (base de données et comptes), Netlify (diffusion de l'application web), Resend (envoi des emails de connexion et de suivi), Expo (publication de l'application mobile). Aucun d'eux n'utilise vos données pour son propre compte.",
       ] },
       { h: "Vos droits", p: [
@@ -85,7 +86,7 @@ export const LEGAL_PAGES: LegalPage[] = [
         "Photos et vidéos de vos propres articles, réellement en stock. Tailles et stock à jour. Commandes confirmées sous 24 heures, expédiées sous 3 jours ouvrés. Réponse aux retours sous 48 heures. Pas de contournement de la plateforme pour vendre en dehors après une mise en relation.",
       ] },
       { h: "Interdit", p: [
-        "Contrefaçons, articles interdits à la vente, contenus offensants, avis frauduleux, harcèlement. Weslet suspend les comptes qui ne respectent pas ces règles.",
+        `Contrefaçons, articles interdits à la vente, contenus offensants, avis frauduleux, harcèlement. ${BRAND.name} suspend les comptes qui ne respectent pas ces règles.`,
       ] },
     ],
   },
@@ -101,7 +102,7 @@ export const LEGAL_PAGES: LegalPage[] = [
       { h: "La taille ne va pas, je fais quoi ?", p: ["Depuis la page de la commande, sous 7 jours après réception, demandez un échange ou un retour. La Boutique vous répond sous 48 h."] },
       { h: "Le stock est-il fiable ?", p: ["Oui : les tailles affichées sont celles réellement en stock, taille par taille, mises à jour en direct. Une taille barrée est épuisée."] },
       { h: "Pourquoi un code par email plutôt qu'un mot de passe ?", p: ["Rien à retenir, rien à voler. Le code arrive en quelques secondes ; vérifiez les spams la première fois."] },
-      { h: "Je suis une boutique, comment je rejoins Weslet ?", p: ["Créez votre compte vendeur sur le site des boutiques, décrivez ce que vous vendez, et l'équipe Weslet vous accompagne : mise en ligne des premières pièces, conseils photo et vidéo, première commande. Programme Starter pour les nouvelles boutiques, Premium pour les marques établies."] },
+      { h: `Je suis une boutique, comment je rejoins ${BRAND.name} ?`, p: [`Créez votre compte vendeur sur le site des boutiques, décrivez ce que vous vendez, et l'équipe ${BRAND.name} vous accompagne : mise en ligne des premières pièces, conseils photo et vidéo, première commande. Programme Starter pour les nouvelles boutiques, Premium pour les marques établies.`] },
       { h: "Comment supprimer mon compte ?", p: ["Paramètres → Supprimer mon compte. C'est immédiat et définitif."] },
       { h: "Comment vous contacter ?", p: [`${CONTACT_EMAIL}, ou depuis Paramètres → Nous contacter.`] },
     ],
@@ -112,7 +113,7 @@ export const LEGAL_PAGES: LegalPage[] = [
     updated: "Octobre 2026",
     sections: [
       { h: "Le principe", p: [
-        "Chaque commande est conclue avec la Boutique qui vend la pièce ; Weslet s'assure que les conditions de retour sont claires, affichées avant l'achat, et respectées. En cas de désaccord, Weslet intervient comme médiateur.",
+        `Chaque commande est conclue avec la Boutique qui vend la pièce ; ${BRAND.name} s'assure que les conditions de retour sont claires, affichées avant l'achat, et respectées. En cas de désaccord, ${BRAND.name} intervient comme médiateur.`,
       ] },
       { h: "Vous changez d'avis", p: [
         "Vous pouvez demander un retour dans les 7 jours suivant la livraison, pour un article non porté, non lavé, avec ses étiquettes. Faites la demande depuis le suivi de votre commande ou auprès de la Boutique ; les frais de retour sont à votre charge sauf indication contraire sur la page de la Boutique. Les pièces personnalisées ou faites sur mesure ne peuvent pas être retournées, sauf défaut.",
@@ -124,7 +125,7 @@ export const LEGAL_PAGES: LegalPage[] = [
         "Il intervient au plus tard 14 jours après réception de la pièce par la Boutique, par le même moyen que le paiement : remise en espèces par le livreur ou virement pour une commande payée à la livraison, recrédit de la carte pour un paiement en ligne. Une commande annulée avant expédition n'entraîne aucun frais.",
       ] },
       { h: "Si la Boutique ne répond pas", p: [
-        `Écrivez à ${CONTACT_EMAIL} avec votre numéro de commande. Weslet répond sous 2 jours ouvrés, rappelle la Boutique à ses engagements et peut suspendre une Boutique qui ne les respecte pas.`,
+        `Écrivez à ${CONTACT_EMAIL} avec votre numéro de commande. ${BRAND.name} répond sous 2 jours ouvrés, rappelle la Boutique à ses engagements et peut suspendre une Boutique qui ne les respecte pas.`,
       ] },
     ],
   },
@@ -134,20 +135,20 @@ export const LEGAL_PAGES: LegalPage[] = [
     updated: "Octobre 2026",
     sections: [
       { h: "Éditeur", p: [
-        "Weslet est un service édité par Mehdi Hmida, porteur du projet, dans le cadre d'une société de droit tunisien en cours de constitution. Ces mentions seront complétées par la dénomination, le numéro d'immatriculation au registre national des entreprises, le matricule fiscal et le siège social dès l'immatriculation.",
+        `${BRAND.name} est un service édité par Mehdi Hmida, porteur du projet, dans le cadre d'une société de droit tunisien en cours de constitution. Ces mentions seront complétées par la dénomination, le numéro d'immatriculation au registre national des entreprises, le matricule fiscal et le siège social dès l'immatriculation.`,
         `Directeur de la publication : Mehdi Hmida. Contact : ${CONTACT_EMAIL}.`,
       ] },
       { h: "Hébergement", p: [
         "Application et sites : Netlify, Inc., 512 2nd Street, San Francisco, CA 94107, États-Unis. Données et comptes : Supabase, Inc., serveurs situés dans l'Union européenne.",
       ] },
       { h: "Propriété intellectuelle", p: [
-        "Le nom Weslet, le logo et l'application sont la propriété de l'éditeur. Les photos, vidéos, noms et marques des pièces appartiennent aux Boutiques qui les publient, qui garantissent en disposer des droits. Toute reproduction sans autorisation est interdite.",
+        `Le nom ${BRAND.name}, le logo et l'application sont la propriété de l'éditeur. Les photos, vidéos, noms et marques des pièces appartiennent aux Boutiques qui les publient, qui garantissent en disposer des droits. Toute reproduction sans autorisation est interdite.`,
       ] },
       { h: "Données personnelles", p: [
         "Le traitement des données personnelles est décrit dans la Politique de confidentialité. Conformément à la loi organique n° 2004-63 relative à la protection des données à caractère personnel, vous disposez d'un droit d'accès, de rectification et de suppression, que vous pouvez exercer depuis Paramètres ou par email.",
       ] },
       { h: "Signaler un contenu", p: [
-        `Une pièce contrefaite, une photo utilisée sans droit, un avis abusif : écrivez à ${CONTACT_EMAIL} avec le lien de la page concernée. Weslet retire le contenu signalé sous 48 heures lorsque le signalement est fondé.`,
+        `Une pièce contrefaite, une photo utilisée sans droit, un avis abusif : écrivez à ${CONTACT_EMAIL} avec le lien de la page concernée. ${BRAND.name} retire le contenu signalé sous 48 heures lorsque le signalement est fondé.`,
       ] },
     ],
   },

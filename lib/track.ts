@@ -6,7 +6,7 @@ import type { Post, Product } from "./types";
 // Anonymous analytics for boutiques: what gets seen, added to cart, shared.
 // No account needed; a random device id ties events together, never a person.
 
-type Kind = "post_view" | "product_view" | "add_to_cart" | "share";
+type Kind = "post_view" | "product_view" | "add_to_cart" | "share" | "favorite" | "unfavorite";
 
 let deviceId: string | null = null;
 const seenThisSession = new Set<string>();
@@ -50,3 +50,6 @@ export function trackProductView(product: Product) {
 
 export const trackAddToCart = (product: Product) => send("add_to_cart", product);
 export const trackShare = (product: Product) => send("share", product);
+
+/** Feeds the public "♥ N en favoris" counter (one vote per device, the latest action wins). */
+export const trackFavorite = (product: Product, on: boolean) => send(on ? "favorite" : "unfavorite", product);

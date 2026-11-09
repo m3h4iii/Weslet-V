@@ -18,7 +18,7 @@ type AuthCtx = {
 
 const Ctx = createContext<AuthCtx | null>(null);
 
-const MOCK_PROFILE: Profile = { id: "mock-user", email: "demo@weslet.tn", fullName: "Client démo", phone: "" };
+const MOCK_PROFILE: Profile = { id: "mock-user", email: "demo@tapchic.tn", fullName: "Client démo", phone: "" };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(IS_MOCK);
